@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Home Bar</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Home Bar">
+<meta name="theme-color" content="#14201b">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%2314201b'/%3E%3Cpath d='M50 55h80l-36 46v30h18v10H68v-10h18v-30z' fill='%23d9972f'/%3E%3C/svg%3E">
+<link rel="manifest" href='data:application/manifest+json,{"name":"Home Bar","short_name":"Home Bar","display":"standalone","background_color":"%2314201b","theme_color":"%2314201b","start_url":".","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 180 180%27%3E%3Crect width=%27180%27 height=%27180%27 rx=%2740%27 fill=%27%2314201b%27/%3E%3Cpath d=%27M50 55h80l-36 46v30h18v10H68v-10h18v-30z%27 fill=%27%23d9972f%27/%3E%3C/svg%3E","sizes":"180x180","type":"image/svg+xml"}]}'>
+<style>
+:root{
+  --bg:#f6f1e7; --bg2:#fbf8f1; --ink:#1b2a23; --ink2:#5a6a61; --line:#d9d1c1;
+  --amber:#b8781e; --amber2:#d9972f; --amber-soft:#f3e2bf;
+  --green:#2f6b4f; --green-soft:#d8eadf;
+  --red:#a9442d; --red-soft:#f4d9d1;
+  --pill:#fffdf8; --sheet:#fffdf8; --shadow:0 -8px 30px rgba(27,42,35,.18);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14201b; --bg2:#1b2a23; --ink:#f1ebdd; --ink2:#a9b3ab; --line:#2f3f36;
+    --amber:#d9972f; --amber2:#e9ac46; --amber-soft:#3a2f16;
+    --green:#7fc39f; --green-soft:#1f3a2c;
+    --red:#e8846a; --red-soft:#3e231b;
+    --pill:#1f2f27; --sheet:#1b2a23; --shadow:0 -8px 30px rgba(0,0,0,.5);
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;height:100%;overscroll-behavior:none}
+h1,h2,h3,.serif{font-family:ui-serif,"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--amber2);outline-offset:2px}
+input{font:inherit;color:inherit}
+.app{min-height:100%;display:flex;flex-direction:column;padding-bottom:calc(68px + env(safe-area-inset-bottom))}
+.screen{display:none;flex:1;padding:calc(12px + env(safe-area-inset-top)) 16px 16px}
+.screen.on{display:block}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px}
+.top h1{font-size:30px;line-height:1.1}
+.top .sub{color:var(--ink2);font-size:14px;margin-top:4px}
+
+/* drinks stepper */
+.stepper{display:inline-flex;align-items:center;border:1.5px solid var(--line);border-radius:999px;background:var(--bg2);height:40px}
+.stepper button{width:40px;height:40px;font-size:22px;line-height:1;color:var(--amber)}
+.stepper span{min-width:72px;text-align:center;font-size:14px}
+.stepper b{font-size:17px}
+
+/* pills */
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 16px}
+.pill{position:relative;display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 6px 0 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--pill);overflow:hidden;font-size:15px}
+.pill .fill{position:absolute;left:0;top:0;bottom:0;background:var(--amber-soft);z-index:0;transition:width .25s}
+.pill .fill.low{background:var(--red-soft)}
+.pill .t{position:relative;z-index:1;display:flex;align-items:baseline;gap:6px}
+.pill .t small{color:var(--ink2);font-size:13px}
+.pill .x{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:var(--ink2);font-size:18px}
+.pill .x:active{background:var(--line)}
+.pill.mix{border-radius:10px}
+.pill.mix .fill{background:var(--green-soft)}
+.break{flex-basis:100%;height:0}
+.toggle{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink2);margin:-6px 0 14px}
+.toggle input{width:20px;height:20px;accent-color:var(--amber);margin:0}
+.ogrp{padding:8px 14px 4px;font-size:12px;color:var(--ink2);background:var(--bg);border-bottom:1px solid var(--line)}
+.pill.add{border-style:dashed;color:var(--amber);padding:0 14px;font-weight:600}
+.empty{color:var(--ink2);font-size:15px;padding:18px 0}
+.more{width:100%;height:44px;border-radius:12px;border:1.5px dashed var(--line);color:var(--amber);font-weight:600;font-size:15px}
+
+/* sections and cards */
+.sec{margin:20px 0 8px;display:flex;align-items:baseline;justify-content:space-between}
+.sec h2{font-size:20px}
+.sec span{color:var(--ink2);font-size:13px}
+.list{display:flex;flex-direction:column;gap:8px}
+.card{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:10px 12px 10px 10px;border-radius:14px;background:var(--bg2);border:1px solid var(--line)}
+.card:active{background:var(--amber-soft)}
+.thumb{width:54px;height:54px;border-radius:10px;background:var(--amber-soft);flex:none;object-fit:cover;display:grid;place-items:center;overflow:hidden}
+.thumb svg{width:30px;height:30px}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.card .body{flex:1;min-width:0}
+.card .name{font-size:17px;display:flex;align-items:center;gap:6px}
+.card .meta{color:var(--ink2);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid currentColor;line-height:1.3;font-weight:600;white-space:nowrap}
+.chip.ok{color:var(--green)}.chip.low{color:var(--amber)}.chip.miss{color:var(--red)}
+.iba{font-family:ui-serif,Georgia,serif;font-size:11px;color:var(--ink2);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.stars{color:var(--amber2);font-size:13px;letter-spacing:1px}
+
+/* search */
+.search{display:flex;gap:8px;margin-bottom:12px}
+.search input{flex:1;height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg2);padding:0 14px;font-size:16px}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.seg button{flex:1;height:38px;font-size:14px;color:var(--ink2)}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.note{font-size:13px;color:var(--ink2);padding:8px 0}
+
+/* tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--bg2);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+.tabs button{flex:1;height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;color:var(--ink2)}
+.tabs button.on{color:var(--amber)}
+.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* detail overlay */
+.detail{position:fixed;inset:0;background:var(--bg);z-index:10;overflow-y:auto;display:none;-webkit-overflow-scrolling:touch}
+.detail.on{display:block}
+.hero{position:relative;height:300px;background:var(--amber-soft);display:grid;place-items:center}
+.hero img{width:100%;height:100%;object-fit:cover}
+.hero svg{width:90px;height:90px}
+.back{position:absolute;top:calc(10px + env(safe-area-inset-top));left:12px;height:40px;padding:0 14px 0 10px;border-radius:999px;background:rgba(20,32,27,.72);color:#f1ebdd;display:flex;align-items:center;gap:4px;font-size:15px;backdrop-filter:blur(8px)}
+.dbody{padding:18px 18px calc(40px + env(safe-area-inset-bottom))}
+.dbody h2{font-size:30px;line-height:1.1;margin-bottom:4px}
+.dbody .meta{color:var(--ink2);font-size:14px;margin-bottom:14px}
+.drow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0}
+.ing{list-style:none;margin:0 0 18px;padding:0}
+.ing li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:16px}
+.ing li .q{color:var(--ink2);white-space:nowrap}
+.ing li.miss{color:var(--red)}.ing li.short{color:var(--amber)}
+.ing li .tag{font-size:12px;margin-left:6px}
+.method{font-size:16px;line-height:1.55;margin-bottom:18px}
+.rate{display:flex;gap:4px}
+.rate button{font-size:28px;color:var(--line)}
+.rate button.on{color:var(--amber2)}
+.linkbtn{display:inline-block;margin-top:8px;color:var(--amber);font-weight:600;text-decoration:none}
+
+/* bottom sheet */
+.scrim{position:fixed;inset:0;background:rgba(10,18,14,.45);z-index:20;display:none}
+.scrim.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--sheet);border-radius:22px 22px 0 0;padding:14px 18px calc(22px + env(safe-area-inset-bottom));box-shadow:var(--shadow);z-index:21;transform:translateY(105%);transition:transform .25s ease;max-height:88vh;display:flex;flex-direction:column}
+.sheet.on{transform:none}
+.sheet .grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
+.sheet h3{font-size:22px;margin-bottom:2px}
+.sheet .hint{color:var(--ink2);font-size:14px;margin-bottom:12px}
+@media (prefers-reduced-motion:reduce){.sheet,.pill .fill{transition:none}}
+
+/* combobox */
+.combo{position:relative}
+.combo input{width:100%;height:48px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg2);padding:0 14px;font-size:17px}
+.options{margin-top:8px;max-height:40vh;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:var(--bg2)}
+.options button{display:block;width:100%;text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);font-size:16px}
+.options button:last-child{border:0}
+.options button.have{color:var(--ink2)}
+.options button.custom{color:var(--amber);font-weight:600}
+
+/* amount editor */
+.big{font-family:ui-serif,Georgia,serif;font-size:44px;line-height:1;margin:6px 0 2px}
+.big small{font-size:18px;color:var(--ink2);font-family:-apple-system,sans-serif;margin-left:4px}
+.approx{color:var(--ink2);font-size:14px;margin-bottom:12px}
+input[type=range]{width:100%;height:44px;accent-color:var(--amber);margin:4px 0 10px}
+.presets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.presets button{height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg2);font-size:14px}
+.presets button:active{background:var(--amber-soft)}
+.nudge{display:flex;gap:8px;margin-bottom:16px}
+.nudge button{flex:1;height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg2);font-size:16px}
+.row{display:flex;gap:10px}
+.primary{flex:1;height:50px;border-radius:14px;background:var(--amber);color:#fff;font-weight:600;font-size:17px}
+.primary{width:100%}
+.links{display:flex;justify-content:space-between;margin-top:14px}
+.link{font-size:15px;color:var(--ink2);padding:6px 2px}
+.link.danger{color:var(--red)}
+.gauge{height:10px;border-radius:5px;background:var(--line);overflow:hidden;margin:4px 0 14px}
+.gauge i{display:block;height:100%;background:var(--amber2);transition:width .15s}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- My bar -->
+  <section class="screen on" id="s-bar">
+    <div class="top">
+      <div><h1>My bar</h1><div class="sub" id="bar-sub">Tap a bottle to adjust it</div></div>
+      <div class="stepper" aria-label="Number of drinks"><button id="dm">−</button><span><b id="dn">1</b> drink</span><button id="dp">+</button></div>
+    </div>
+    <div class="pills" id="pills"></div>
+    <div id="matches"></div>
+  </section>
+
+  <!-- All cocktails -->
+  <section class="screen" id="s-all">
+    <div class="top"><div><h1>All cocktails</h1><div class="sub" id="all-sub"></div></div></div>
+    <div class="search"><input id="q-all" type="search" placeholder="Name or ingredient, e.g. tequila" autocomplete="off"></div>
+    <div class="list" id="all-list"></div>
+  </section>
+
+  <!-- Online -->
+  <section class="screen" id="s-web">
+    <div class="top"><div><h1>Explore</h1><div class="sub">Thousands more from TheCocktailDB</div></div></div>
+    <div class="seg"><button class="on" data-mode="name">By name</button><button data-mode="ing">By ingredient</button></div>
+    <div class="search"><input id="q-web" type="search" placeholder="Search…" autocomplete="off" enterkeyhint="search"></div>
+    <div class="note" id="web-note"></div>
+    <div class="list" id="web-list"></div>
+    <div class="sec"><h2>Offline library</h2></div>
+    <p class="note" id="baked-note"></p>
+    <p class="note">Every drink from TheCocktailDB is stored on this phone so it works offline and shows up in My bar and All cocktails. Measures are converted to ml automatically.</p>
+    <button class="more" id="import">Import the whole TheCocktailDB catalogue</button>
+    <div class="note" id="import-note"></div>
+    <button class="link danger" id="clear" hidden></button>
+  </section>
+
+  <nav class="tabs">
+    <button class="on" data-tab="bar"><svg viewBox="0 0 24 24"><path d="M8 3h8l-1 7a3 3 0 0 1-6 0zM12 13v7M8 21h8"/></svg>My bar</button>
+    <button data-tab="all"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg>All cocktails</button>
+    <button data-tab="web"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Explore</button>
+  </nav>
+</div>
+
+<!-- Recipe detail -->
+<div class="detail" id="detail"></div>
+
+<!-- Sheets -->
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"></div>
+<script>
+// ---------- Spirits & liqueurs you can stock ----------
+const SPIRITS = ["Vodka","Gin","White rum","Dark rum","Spiced rum","Tequila","Mezcal","Bourbon","Rye whiskey","Scotch whisky","Irish whiskey","Japanese whisky","Brandy","Cognac","Pisco","Cachaça","Triple sec","Cointreau","Grand Marnier","Orange curaçao","Blue curaçao","Campari","Aperol","Sweet vermouth","Dry vermouth","Lillet blanc","Amaretto","Coffee liqueur","Irish cream","Peach schnapps","Maraschino liqueur","Crème de cassis","Crème de mûre","Crème de menthe","Crème de cacao","Crème de violette","Elderflower liqueur","Passion fruit liqueur","Midori","Galliano","Drambuie","Bénédictine","Green Chartreuse","Yellow Chartreuse","Amaro","Fernet-Branca","Limoncello","Frangelico","Southern Comfort","Jägermeister","Absinthe","Prosecco","Champagne","Sparkling wine","Sake","Soju","Port","Sherry","Cherry liqueur","White wine","Red wine","Sloe gin","Coconut rum","Apricot brandy","Aquavit"];
+
+// Mixers, juices, syrups and bitters you can also track
+const MIXER_GROUPS = {
+  "Juices":["Lime juice","Lemon juice","Orange juice","Pineapple juice","Cranberry juice","Grapefruit juice","Tomato juice","Passion fruit juice","Apple juice","Peach purée"],
+  "Sodas & mixers":["Soda water","Tonic water","Cola","Lemonade","Ginger beer","Ginger ale","Grapefruit soda","Energy drink","Coconut water"],
+  "Syrups & sweeteners":["Simple syrup","Agave syrup","Honey syrup","Honey-ginger syrup","Orgeat syrup","Grenadine","Raspberry syrup","Vanilla syrup","Elderflower cordial","Lime cordial"],
+  "Dairy & other":["Cream","Coconut cream","Milk","Egg white","Espresso","Hot coffee"],
+  "Bitters":["Angostura bitters","Orange bitters","Peychaud's bitters"]
+};
+const MIXERS = Object.values(MIXER_GROUPS).flat();
+const MIXER_SET = new Set(MIXERS);
+const MIXNORM = {"lime juice":"Lime juice","juice of lime":"Lime juice","lime":"Lime juice","lemon juice":"Lemon juice","juice of lemon":"Lemon juice","lemon":"Lemon juice","orange juice":"Orange juice","pineapple juice":"Pineapple juice","cranberry juice":"Cranberry juice","grapefruit juice":"Grapefruit juice","tomato juice":"Tomato juice","passion fruit juice":"Passion fruit juice","apple juice":"Apple juice","peach nectar":"Peach purée","soda water":"Soda water","club soda":"Soda water","carbonated water":"Soda water","sparkling water":"Soda water","tonic water":"Tonic water","cola":"Cola","coca-cola":"Cola","pepsi":"Cola","lemonade":"Lemonade","sprite":"Lemonade","7-up":"Lemonade","ginger beer":"Ginger beer","ginger ale":"Ginger ale","sugar syrup":"Simple syrup","simple syrup":"Simple syrup","agave syrup":"Agave syrup","honey syrup":"Honey syrup","orgeat syrup":"Orgeat syrup","grenadine":"Grenadine","raspberry syrup":"Raspberry syrup","vanilla syrup":"Vanilla syrup","elderflower cordial":"Elderflower cordial","lime cordial":"Lime cordial","rose's lime juice":"Lime cordial","cream":"Cream","light cream":"Cream","heavy cream":"Cream","half-and-half":"Cream","coconut cream":"Coconut cream","cream of coconut":"Coconut cream","coconut milk":"Coconut cream","milk":"Milk","egg white":"Egg white","espresso":"Espresso","coffee":"Hot coffee","hot coffee":"Hot coffee","angostura bitters":"Angostura bitters","bitters":"Angostura bitters","orange bitters":"Orange bitters","peychaud bitters":"Peychaud's bitters"};
+
+// A recipe ingredient on the left is satisfied by anything on the right
+const SUBS = {
+  "Triple sec":["Cointreau","Grand Marnier","Orange curaçao"],
+  "Cointreau":["Triple sec","Grand Marnier"],
+  "Grand Marnier":["Cointreau","Triple sec"],
+  "Orange curaçao":["Triple sec","Cointreau"],
+  "Whisky (any)":["Bourbon","Rye whiskey","Scotch whisky","Irish whiskey","Japanese whisky"],
+  "Bourbon":["Rye whiskey"],
+  "Rye whiskey":["Bourbon"],
+  "Brandy":["Cognac"],
+  "Cognac":["Brandy"],
+  "Prosecco":["Champagne","Sparkling wine"],
+  "Champagne":["Prosecco","Sparkling wine"],
+  "Sparkling wine":["Prosecco","Champagne"],
+  "Lillet blanc":["Dry vermouth"],
+  "White rum":["Spiced rum"],
+  "Amaro":["Fernet-Branca"],
+  "Sloe gin":[],
+  "Coconut rum":["White rum"],
+  "Aquavit":["Vodka","Brandy"]
+};
+
+// Names TheCocktailDB uses -> our names
+const NORMALISE = {"light rum":"White rum","white rum":"White rum","rum":"White rum","dark rum":"Dark rum","añejo rum":"Dark rum","gold rum":"Dark rum","spiced rum":"Spiced rum","151 proof rum":"Dark rum","blended whiskey":"Whisky (any)","whiskey":"Whisky (any)","whisky":"Whisky (any)","scotch":"Scotch whisky","bourbon":"Bourbon","rye whiskey":"Rye whiskey","irish whiskey":"Irish whiskey","vermouth":"Sweet vermouth","sweet vermouth":"Sweet vermouth","dry vermouth":"Dry vermouth","kahlua":"Coffee liqueur","tia maria":"Coffee liqueur","coffee liqueur":"Coffee liqueur","baileys irish cream":"Irish cream","irish cream":"Irish cream","cointreau":"Cointreau","triple sec":"Triple sec","grand marnier":"Grand Marnier","orange curacao":"Orange curaçao","blue curacao":"Blue curaçao","creme de cassis":"Crème de cassis","creme de cacao":"Crème de cacao","white creme de cacao":"Crème de cacao","dark creme de cacao":"Crème de cacao","creme de menthe":"Crème de menthe","green creme de menthe":"Crème de menthe","white creme de menthe":"Crème de menthe","creme de violette":"Crème de violette","maraschino liqueur":"Maraschino liqueur","luxardo maraschino":"Maraschino liqueur","st. germain":"Elderflower liqueur","peach schnapps":"Peach schnapps","southern comfort":"Southern Comfort","amaretto":"Amaretto","campari":"Campari","aperol":"Aperol","champagne":"Champagne","prosecco":"Prosecco","sparkling wine":"Sparkling wine","cachaca":"Cachaça","pisco":"Pisco","mezcal":"Mezcal","tequila":"Tequila","gold tequila":"Tequila","vodka":"Vodka","gin":"Gin","sloe gin":"Sloe gin","malibu rum":"Coconut rum","coconut rum":"Coconut rum","coconut liqueur":"Coconut rum","brandy":"Brandy","cognac":"Cognac","apricot brandy":"Apricot brandy","apricot liqueur":"Apricot brandy","galliano":"Galliano","midori melon liqueur":"Midori","midori":"Midori","drambuie":"Drambuie","benedictine":"Bénédictine","green chartreuse":"Green Chartreuse","yellow chartreuse":"Yellow Chartreuse","absinthe":"Absinthe","jägermeister":"Jägermeister","jagermeister":"Jägermeister","frangelico":"Frangelico","limoncello":"Limoncello","sake":"Sake","port":"Port","sherry":"Sherry","chambord raspberry liqueur":"Crème de mûre","creme de mure":"Crème de mûre","passoa":"Passion fruit liqueur","lillet blanc":"Lillet blanc","lillet":"Lillet blanc","fernet-branca":"Fernet-Branca","amaro":"Amaro","cherry brandy":"Cherry liqueur","cherry heering":"Cherry liqueur","cherry liqueur":"Cherry liqueur","white wine":"White wine","aquavit":"Aquavit","akvavit":"Aquavit","dry white wine":"White wine","red wine":"Red wine","ricard":"Absinthe","pernod":"Absinthe","ouzo":"Absinthe","sambuca":"Absinthe"};
+
+// ---------- Built-in library (per single drink, ml). a = spirit needed, o = optional spirit, m = mixer/garnish ----------
+const R = (name,iba,glass,ing,method) => ({name,iba,glass,ing:ing.map(([n,q,t,note])=>({n,q,t:t||'a',note})),method,src:'built-in'});
+const LIBRARY = [
+R("Margarita",1,"Coupe",[["Tequila",50],["Triple sec",20],["Lime juice",15,"m"],["Salt rim",0,"m"]],"Shake tequila, triple sec and lime with ice. Strain into a salt-rimmed coupe or over fresh ice."),
+R("Tommy's Margarita",0,"Rocks",[["Tequila",60],["Lime juice",30,"m"],["Agave syrup",15,"m"]],"Shake everything hard with ice and strain over fresh ice."),
+R("Mezcal Margarita",0,"Rocks",[["Mezcal",50],["Triple sec",20],["Lime juice",20,"m"]],"Shake with ice, strain over fresh ice. Half salt rim works well."),
+R("Paloma",1,"Highball",[["Tequila",50],["Grapefruit soda",100,"m"],["Lime juice",15,"m"],["Pinch of salt",0,"m"]],"Build in a tall glass over ice, stir gently, garnish with a grapefruit or lime wedge."),
+R("Tequila Sunrise",1,"Highball",[["Tequila",45],["Orange juice",90,"m"],["Grenadine",15,"m"]],"Pour tequila and orange juice over ice, then slowly add grenadine so it sinks. Don't stir."),
+R("El Diablo",0,"Highball",[["Tequila",45],["Crème de cassis",15],["Lime juice",15,"m"],["Ginger beer",100,"m"]],"Shake tequila, cassis and lime with ice, strain into a tall glass over ice, top with ginger beer."),
+R("Oaxaca Old Fashioned",0,"Rocks",[["Tequila",45],["Mezcal",15],["Agave syrup",7,"m"],["Angostura bitters",2,"m"]],"Stir with ice until well chilled, strain over a large cube. Flame an orange peel over the top."),
+R("Naked & Famous",0,"Coupe",[["Mezcal",22],["Yellow Chartreuse",22],["Aperol",22],["Lime juice",22,"m"]],"Equal parts. Shake with ice and strain into a chilled coupe."),
+R("Daiquiri",1,"Coupe",[["White rum",60],["Lime juice",20,"m"],["Simple syrup",10,"m"]],"Shake hard with ice and double-strain into a chilled coupe."),
+R("Mojito",1,"Highball",[["White rum",45],["Lime juice",20,"m"],["Sugar",2,"m","tsp"],["Mint leaves",6,"m","leaves"],["Soda water",60,"m"]],"Gently muddle mint with sugar and lime in the glass. Add rum, fill with crushed ice, top with soda and stir."),
+R("Piña Colada",1,"Hurricane",[["White rum",50],["Coconut cream",30,"m"],["Pineapple juice",50,"m"]],"Blend with crushed ice until smooth, or shake hard and pour over ice."),
+R("Dark 'n' Stormy",1,"Highball",[["Dark rum",60],["Ginger beer",100,"m"],["Lime juice",10,"m"]],"Fill a tall glass with ice, add ginger beer, float the rum on top. Lime wedge."),
+R("Cuba Libre",1,"Highball",[["White rum",50],["Cola",120,"m"],["Lime juice",10,"m"]],"Build over ice, squeeze in a lime wedge and stir once."),
+R("Mai Tai",1,"Rocks",[["White rum",30],["Dark rum",30],["Orange curaçao",15],["Orgeat syrup",15,"m"],["Lime juice",30,"m"]],"Shake all with ice, pour unstrained into a rocks glass. Garnish with mint and a spent lime shell."),
+R("Jungle Bird",0,"Rocks",[["Dark rum",45],["Campari",20],["Pineapple juice",45,"m"],["Lime juice",15,"m"],["Simple syrup",15,"m"]],"Shake with ice and strain over fresh ice. Pineapple wedge garnish."),
+R("Painkiller",0,"Highball",[["Dark rum",60],["Pineapple juice",120,"m"],["Orange juice",30,"m"],["Coconut cream",30,"m"]],"Shake hard with ice, pour over crushed ice, dust with nutmeg."),
+R("Hurricane",0,"Hurricane",[["White rum",30],["Dark rum",30],["Passion fruit juice",60,"m"],["Orange juice",30,"m"],["Lime juice",15,"m"],["Grenadine",10,"m"]],"Shake with ice and strain over crushed ice."),
+R("Planter's Punch",1,"Highball",[["Dark rum",45],["Orange juice",35,"m"],["Pineapple juice",35,"m"],["Lemon juice",20,"m"],["Grenadine",10,"m"],["Angostura bitters",2,"m"]],"Shake with ice, pour into a tall glass with ice."),
+R("Caipirinha",1,"Rocks",[["Cachaça",60],["Lime",1,"m","whole, cut in wedges"],["Sugar",4,"m","tsp"]],"Muddle lime wedges with sugar in the glass, add cachaça and crushed ice, stir."),
+R("Pisco Sour",1,"Coupe",[["Pisco",45],["Lemon juice",30,"m"],["Simple syrup",20,"m"],["Egg white",1,"m"],["Angostura bitters",1,"m","dash on top"]],"Dry shake without ice, then shake with ice. Strain into a coupe, dot bitters on the foam."),
+R("Negroni",1,"Rocks",[["Gin",30],["Campari",30],["Sweet vermouth",30]],"Stir with ice, strain over a large cube. Orange peel."),
+R("Americano",1,"Highball",[["Campari",30],["Sweet vermouth",30],["Soda water",60,"m"]],"Build over ice, top with soda, orange slice."),
+R("Boulevardier",1,"Rocks",[["Bourbon",45],["Campari",30],["Sweet vermouth",30]],"Stir with ice and strain over a large cube. Orange peel."),
+R("Aperol Spritz",1,"Wine glass",[["Aperol",60],["Prosecco",90],["Soda water",30,"m"]],"Fill a wine glass with ice, add prosecco, then Aperol, then a splash of soda. Orange slice."),
+R("Hugo",0,"Wine glass",[["Elderflower liqueur",30],["Prosecco",90],["Soda water",30,"m"],["Mint leaves",4,"m","leaves"]],"Build over ice, top with prosecco and soda, garnish with mint and lime."),
+R("Dry Martini",1,"Martini",[["Gin",60],["Dry vermouth",10]],"Stir with ice until very cold, strain into a chilled glass. Lemon twist or olive."),
+R("Vodka Martini",0,"Martini",[["Vodka",60],["Dry vermouth",10]],"Stir with ice, strain into a chilled glass. Olive or twist."),
+R("Vesper",1,"Martini",[["Gin",45],["Vodka",15],["Lillet blanc",7]],"Shake with ice (as Bond insists) and strain. Large lemon peel."),
+R("Gin & Tonic",0,"Highball",[["Gin",50],["Tonic water",150,"m"]],"Fill the glass with ice, add gin, top with tonic, stir once. Lime or cucumber."),
+R("Tom Collins",1,"Highball",[["Gin",45],["Lemon juice",30,"m"],["Simple syrup",15,"m"],["Soda water",60,"m"]],"Shake gin, lemon and syrup with ice, strain into a tall glass with ice, top with soda."),
+R("Gin Fizz",1,"Highball",[["Gin",45],["Lemon juice",30,"m"],["Simple syrup",10,"m"],["Soda water",60,"m"]],"Shake with ice, strain into a chilled glass without ice, top with soda."),
+R("Gimlet",0,"Coupe",[["Gin",60],["Lime juice",20,"m"],["Simple syrup",15,"m"]],"Shake with ice and strain into a chilled coupe."),
+R("Southside",0,"Coupe",[["Gin",60],["Lime juice",22,"m"],["Simple syrup",22,"m"],["Mint leaves",6,"m","leaves"]],"Shake everything with ice, double-strain into a coupe, float a mint leaf."),
+R("Bee's Knees",0,"Coupe",[["Gin",60],["Lemon juice",22,"m"],["Honey syrup",22,"m"]],"Shake with ice and strain into a chilled coupe."),
+R("French 75",1,"Flute",[["Gin",30],["Lemon juice",15,"m"],["Simple syrup",15,"m"],["Champagne",60]],"Shake gin, lemon and syrup with ice, strain into a flute, top with champagne."),
+R("Clover Club",1,"Coupe",[["Gin",45],["Lemon juice",15,"m"],["Raspberry syrup",15,"m"],["Egg white",1,"m"]],"Dry shake, then shake with ice. Double-strain into a coupe."),
+R("Bramble",0,"Rocks",[["Gin",40],["Crème de mûre",15],["Lemon juice",15,"m"],["Simple syrup",10,"m"]],"Shake gin, lemon and syrup, strain over crushed ice, drizzle the crème de mûre over the top."),
+R("Aviation",1,"Coupe",[["Gin",45],["Maraschino liqueur",15],["Crème de violette",5,"o"],["Lemon juice",15,"m"]],"Shake with ice and strain into a coupe. Cherry garnish."),
+R("Last Word",0,"Coupe",[["Gin",22],["Green Chartreuse",22],["Maraschino liqueur",22],["Lime juice",22,"m"]],"Equal parts. Shake with ice and double-strain."),
+R("Corpse Reviver No. 2",0,"Coupe",[["Gin",22],["Triple sec",22],["Lillet blanc",22],["Lemon juice",22,"m"],["Absinthe",2,"o","rinse"]],"Rinse a coupe with absinthe. Shake the rest with ice and strain in."),
+R("Hanky Panky",1,"Coupe",[["Gin",45],["Sweet vermouth",45],["Fernet-Branca",7]],"Stir with ice, strain into a coupe, orange twist."),
+R("Martinez",0,"Coupe",[["Gin",45],["Sweet vermouth",45],["Maraschino liqueur",5],["Orange bitters",1,"m","dash"]],"Stir with ice and strain. Lemon twist."),
+R("Old Fashioned",1,"Rocks",[["Bourbon",45],["Sugar",1,"m","cube"],["Angostura bitters",2,"m","dashes"],["Water",5,"m","splash"]],"Muddle sugar with bitters and a splash of water. Add whiskey and a large ice cube, stir, orange peel."),
+R("Manhattan",1,"Coupe",[["Rye whiskey",50],["Sweet vermouth",20],["Angostura bitters",1,"m","dash"]],"Stir with ice and strain into a chilled coupe. Cherry."),
+R("Whiskey Sour",1,"Rocks",[["Bourbon",45],["Lemon juice",30,"m"],["Simple syrup",20,"m"],["Egg white",1,"m","optional"]],"Shake (dry shake first if using egg white) and strain over ice."),
+R("Mint Julep",1,"Julep cup",[["Bourbon",60],["Simple syrup",10,"m"],["Mint leaves",6,"m","leaves"]],"Gently press mint with syrup, add bourbon and crushed ice, stir until frosty, mint bouquet."),
+R("Sazerac",1,"Rocks",[["Rye whiskey",50],["Absinthe",5,"o","rinse"],["Sugar",1,"m","cube"],["Peychaud's bitters",3,"m","dashes"]],"Rinse a chilled glass with absinthe. Stir rye, sugar and bitters with ice, strain in. Lemon peel, discarded."),
+R("Paper Plane",0,"Coupe",[["Bourbon",22],["Aperol",22],["Amaro",22],["Lemon juice",22,"m"]],"Equal parts. Shake with ice and strain."),
+R("Rob Roy",0,"Coupe",[["Scotch whisky",50],["Sweet vermouth",25],["Angostura bitters",1,"m","dash"]],"Stir with ice and strain. Cherry or twist."),
+R("Penicillin",0,"Rocks",[["Scotch whisky",50],["Lemon juice",20,"m"],["Honey-ginger syrup",20,"m"]],"Shake with ice, strain over a large cube. Float a little smoky scotch if you have it; candied ginger."),
+R("Rusty Nail",1,"Rocks",[["Scotch whisky",45],["Drambuie",25]],"Stir over ice in a rocks glass. Lemon twist."),
+R("Godfather",0,"Rocks",[["Scotch whisky",35],["Amaretto",35]],"Build over ice and stir."),
+R("Whisky Highball",0,"Highball",[["Whisky (any)",45],["Soda water",120,"m"]],"Tall glass full of ice, whisky, top with very cold soda. Stir once."),
+R("Hot Toddy",0,"Mug",[["Whisky (any)",45],["Honey",15,"m"],["Lemon juice",15,"m"],["Hot water",120,"m"]],"Stir honey into hot water, add whisky and lemon. Cinnamon stick or cloves."),
+R("Irish Coffee",1,"Mug",[["Irish whiskey",40],["Hot coffee",120,"m"],["Sugar",2,"m","tsp"],["Cream",30,"m","lightly whipped"]],"Stir sugar into hot coffee, add whiskey, float cream over the back of a spoon."),
+R("Sidecar",1,"Coupe",[["Cognac",50],["Triple sec",20],["Lemon juice",20,"m"]],"Shake with ice and strain into a sugar-rimmed coupe."),
+R("Brandy Alexander",0,"Coupe",[["Cognac",30],["Crème de cacao",30],["Cream",30,"m"]],"Shake hard with ice, strain into a coupe, grate nutmeg on top."),
+R("Stinger",1,"Rocks",[["Cognac",50],["Crème de menthe",20]],"Stir with ice and strain over crushed ice."),
+R("Between the Sheets",1,"Coupe",[["Cognac",30],["White rum",30],["Triple sec",30],["Lemon juice",20,"m"]],"Shake with ice and strain."),
+R("Horse's Neck",1,"Highball",[["Brandy",40],["Ginger ale",120,"m"],["Angostura bitters",1,"m","dash"]],"Long lemon spiral in the glass, ice, brandy, top with ginger ale."),
+R("Cosmopolitan",1,"Martini",[["Vodka",40],["Triple sec",15],["Lime juice",15,"m"],["Cranberry juice",30,"m"]],"Shake with ice and strain into a chilled glass. Flamed orange peel if you're showing off."),
+R("Moscow Mule",1,"Copper mug",[["Vodka",45],["Lime juice",10,"m"],["Ginger beer",120,"m"]],"Build over ice, stir, lime wedge."),
+R("Espresso Martini",1,"Coupe",[["Vodka",50],["Coffee liqueur",30],["Espresso",30,"m"],["Simple syrup",10,"m"]],"Shake very hard with ice, strain into a chilled coupe. Three coffee beans."),
+R("White Russian",0,"Rocks",[["Vodka",50],["Coffee liqueur",20],["Cream",30,"m"]],"Pour vodka and coffee liqueur over ice, float cream."),
+R("Black Russian",1,"Rocks",[["Vodka",50],["Coffee liqueur",20]],"Build over ice and stir."),
+R("Mudslide",0,"Rocks",[["Vodka",30],["Coffee liqueur",30],["Irish cream",30]],"Shake with ice and strain over ice, or blend with ice cream."),
+R("Sex on the Beach",1,"Highball",[["Vodka",40],["Peach schnapps",20],["Orange juice",40,"m"],["Cranberry juice",40,"m"]],"Build over ice and stir."),
+R("Screwdriver",1,"Highball",[["Vodka",50],["Orange juice",100,"m"]],"Build over ice, stir."),
+R("Bloody Mary",1,"Highball",[["Vodka",45],["Tomato juice",90,"m"],["Lemon juice",15,"m"],["Worcestershire sauce",2,"m","dashes"],["Tabasco",1,"m","dash"],["Salt & pepper",0,"m"]],"Roll gently between two glasses with ice (don't shake). Celery stick."),
+R("Vodka Soda",0,"Highball",[["Vodka",45],["Soda water",120,"m"],["Lime wedge",1,"m"]],"Build over ice, squeeze in lime."),
+R("Lemon Drop",1,"Martini",[["Vodka",50],["Triple sec",15],["Lemon juice",20,"m"],["Simple syrup",10,"m"]],"Shake with ice, strain into a sugar-rimmed glass."),
+R("Blue Lagoon",0,"Highball",[["Vodka",40],["Blue curaçao",20],["Lemonade",120,"m"]],"Build over ice, stir, cherry and lemon."),
+R("Pornstar Martini",0,"Coupe",[["Vodka",45],["Passion fruit liqueur",15],["Vanilla syrup",10,"m"],["Passion fruit",1,"m","half, pulp"],["Prosecco",30,"o","on the side"]],"Shake vodka, liqueur, syrup and pulp with ice, strain into a coupe, float the other passion fruit half. Serve a shot of prosecco alongside."),
+R("Long Island Iced Tea",1,"Highball",[["Vodka",15],["Gin",15],["White rum",15],["Tequila",15],["Triple sec",15],["Lemon juice",25,"m"],["Simple syrup",30,"m"],["Cola",40,"m"]],"Add everything but the cola to a tall glass with ice, stir, top with cola."),
+R("Amaretto Sour",0,"Rocks",[["Amaretto",45],["Lemon juice",30,"m"],["Simple syrup",10,"m"],["Egg white",1,"m","optional"]],"Shake (dry shake first with egg white), strain over ice."),
+R("Midori Sour",0,"Rocks",[["Midori",45],["Lemon juice",30,"m"],["Simple syrup",10,"m"]],"Shake with ice, strain over ice."),
+R("Grasshopper",1,"Coupe",[["Crème de menthe",30],["Crème de cacao",30],["Cream",30,"m"]],"Shake hard with ice and strain into a coupe."),
+R("B-52",1,"Shot",[["Coffee liqueur",20],["Irish cream",20],["Grand Marnier",20]],"Layer in order over the back of a spoon: coffee liqueur, Irish cream, Grand Marnier."),
+R("Bellini",1,"Flute",[["Prosecco",100],["Peach purée",50,"m"]],"Pour purée into a flute, slowly top with prosecco, stir gently."),
+R("Mimosa",1,"Flute",[["Champagne",75],["Orange juice",75,"m"]],"Pour juice first, then champagne. No stirring."),
+R("Kir Royale",1,"Flute",[["Crème de cassis",10],["Champagne",90]],"Cassis in the flute, top with champagne."),
+R("Jägerbomb",0,"Pint",[["Jägermeister",30],["Energy drink",120,"m"]],"Drop the shot into the glass of energy drink."),
+R("Singapore Sling",1,"Highball",[["Gin",30],["Cherry liqueur",15],["Cointreau",7],["Bénédictine",7],["Pineapple juice",120,"m"],["Lime juice",15,"m"],["Grenadine",10,"m"],["Angostura bitters",1,"m","dash"]],"Shake everything with ice, strain into a tall glass over ice. Pineapple and cherry."),
+R("Zombie",0,"Highball",[["White rum",30],["Dark rum",30],["Brandy",15],["Pineapple juice",30,"m"],["Lime juice",15,"m"],["Grenadine",10,"m"]],"Shake hard with ice and pour over crushed ice. A simplified take on the tiki original."),
+R("Rum Punch",0,"Highball",[["Dark rum",60],["Orange juice",60,"m"],["Pineapple juice",60,"m"],["Lime juice",20,"m"],["Grenadine",10,"m"]],"One of sour, two of sweet, three of strong, four of weak. Shake and pour over ice, nutmeg on top."),
+R("Hemingway Daiquiri",0,"Coupe",[["White rum",60],["Maraschino liqueur",15],["Grapefruit juice",20,"m"],["Lime juice",20,"m"]],"Shake with ice and double-strain into a coupe."),
+R("Rum Old Fashioned",0,"Rocks",[["Dark rum",60],["Simple syrup",7,"m"],["Angostura bitters",2,"m","dashes"]],"Stir with ice, strain over a large cube, orange peel."),
+R("Yellow Bird",1,"Coupe",[["White rum",30],["Galliano",15],["Triple sec",15],["Lime juice",15,"m"]],"Shake with ice and strain."),
+R("Batanga",0,"Highball",[["Tequila",50],["Cola",120,"m"],["Lime juice",15,"m"],["Salt rim",0,"m"]],"Salt-rimmed glass, ice, tequila, lime, top with cola. Stir with a knife, traditionally."),
+R("Ranch Water",0,"Highball",[["Tequila",45],["Lime juice",20,"m"],["Soda water",120,"m"]],"Build over ice in a tall glass, top with very cold soda."),
+R("Mexican Mule",0,"Copper mug",[["Tequila",45],["Lime juice",15,"m"],["Ginger beer",120,"m"]],"Build over ice, stir, lime wedge."),
+R("Matador",0,"Highball",[["Tequila",45],["Pineapple juice",90,"m"],["Lime juice",15,"m"]],"Shake with ice, strain over fresh ice."),
+R("Siesta",0,"Coupe",[["Tequila",45],["Campari",15],["Lime juice",15,"m"],["Grapefruit juice",15,"m"],["Simple syrup",10,"m"]],"Shake with ice and strain into a coupe."),
+R("Negroni Sbagliato",0,"Rocks",[["Campari",30],["Sweet vermouth",30],["Prosecco",60]],"Build over ice: Campari, vermouth, top with prosecco. Orange slice."),
+R("Garibaldi",0,"Highball",[["Campari",45],["Orange juice",120,"m"]],"Fluffy orange juice is the point: blend or shake the juice first, then pour over Campari and ice."),
+R("Bicicletta",0,"Wine glass",[["Campari",60],["White wine",90],["Soda water",60,"m"]],"Build over ice, top with soda, lemon wheel."),
+R("Gin Sour",0,"Rocks",[["Gin",60],["Lemon juice",30,"m"],["Simple syrup",20,"m"],["Egg white",1,"m","optional"]],"Dry shake with egg white, shake with ice, strain over fresh ice."),
+R("Gin Basil Smash",0,"Rocks",[["Gin",60],["Lemon juice",25,"m"],["Simple syrup",20,"m"],["Basil leaves",8,"m","leaves"]],"Muddle basil with lemon and syrup, add gin, shake hard, double-strain over ice."),
+R("Bijou",0,"Coupe",[["Gin",30],["Green Chartreuse",30],["Sweet vermouth",30],["Orange bitters",1,"m","dash"]],"Stir with ice and strain. Lemon twist and a cherry."),
+R("Gin Rickey",0,"Highball",[["Gin",45],["Lime juice",15,"m"],["Soda water",120,"m"]],"Build over ice, no sugar, lime wedge."),
+R("Ramos Gin Fizz",1,"Highball",[["Gin",45],["Lemon juice",15,"m"],["Lime juice",15,"m"],["Simple syrup",30,"m"],["Cream",30,"m"],["Egg white",1,"m"],["Soda water",30,"m"],["Orange flower water",3,"m","drops"]],"Dry shake for a full minute, then shake with ice. Strain into a chilled glass and top slowly with soda until the foam rises."),
+R("Monkey Gland",1,"Coupe",[["Gin",50],["Orange juice",30,"m"],["Grenadine",2,"m","dashes"],["Absinthe",2,"o","dashes"]],"Shake with ice and strain."),
+R("Tuxedo",1,"Coupe",[["Gin",30],["Dry vermouth",30],["Maraschino liqueur",5],["Absinthe",2,"o","dashes"],["Orange bitters",1,"m","dash"]],"Stir with ice and strain. Lemon twist and cherry."),
+R("Army & Navy",0,"Coupe",[["Gin",60],["Lemon juice",20,"m"],["Orgeat syrup",15,"m"]],"Shake with ice and double-strain."),
+R("Alexander",1,"Coupe",[["Gin",30],["Crème de cacao",30],["Cream",30,"m"]],"Shake hard with ice, strain, grate nutmeg on top."),
+R("Breakfast Martini",0,"Coupe",[["Gin",50],["Triple sec",15],["Lemon juice",15,"m"],["Orange marmalade",1,"m","heaped tsp"]],"Stir the marmalade into the gin first, then shake everything with ice and double-strain."),
+R("Elderflower Collins",0,"Highball",[["Gin",45],["Elderflower liqueur",20],["Lemon juice",20,"m"],["Soda water",60,"m"]],"Shake gin, liqueur and lemon with ice, strain into a tall glass over ice, top with soda."),
+R("Pink Gin",0,"Coupe",[["Gin",60],["Angostura bitters",3,"m","dashes"]],"Swirl bitters around a chilled glass, add very cold gin."),
+R("Casino",1,"Coupe",[["Gin",40],["Maraschino liqueur",10],["Lemon juice",10,"m"],["Orange bitters",2,"m","dashes"]],"Shake with ice and strain. Lemon twist and cherry."),
+R("John Collins",1,"Highball",[["Bourbon",45],["Lemon juice",30,"m"],["Simple syrup",15,"m"],["Soda water",60,"m"]],"Shake bourbon, lemon and syrup with ice, strain into a tall glass with ice, top with soda."),
+R("Whisky Smash",0,"Rocks",[["Bourbon",60],["Lemon juice",20,"m"],["Simple syrup",15,"m"],["Mint leaves",6,"m","leaves"]],"Muddle mint gently with lemon and syrup, add bourbon, shake, strain over crushed ice."),
+R("Gold Rush",0,"Rocks",[["Bourbon",60],["Lemon juice",22,"m"],["Honey syrup",22,"m"]],"Shake with ice, strain over a large cube."),
+R("Brown Derby",0,"Coupe",[["Bourbon",45],["Grapefruit juice",30,"m"],["Honey syrup",15,"m"]],"Shake with ice and strain."),
+R("New York Sour",0,"Rocks",[["Bourbon",45],["Lemon juice",30,"m"],["Simple syrup",20,"m"],["Red wine",15],["Egg white",1,"m","optional"]],"Make a whiskey sour, then float the red wine over the back of a spoon."),
+R("Kentucky Mule",0,"Copper mug",[["Bourbon",45],["Lime juice",15,"m"],["Ginger beer",120,"m"]],"Build over ice, stir, mint sprig."),
+R("Lynchburg Lemonade",0,"Highball",[["Bourbon",30],["Triple sec",30],["Lemon juice",30,"m"],["Lemonade",120,"m"]],"Shake the first three with ice, strain into a tall glass, top with lemonade."),
+R("Whisky Ginger",0,"Highball",[["Whisky (any)",45],["Ginger ale",120,"m"]],"Build over ice, lime wedge."),
+R("Blood and Sand",1,"Coupe",[["Scotch whisky",20],["Cherry liqueur",20],["Sweet vermouth",20],["Orange juice",20,"m"]],"Equal parts. Shake with ice and strain."),
+R("Bobby Burns",0,"Coupe",[["Scotch whisky",45],["Sweet vermouth",45],["Bénédictine",7]],"Stir with ice and strain. Lemon twist."),
+R("Vieux Carré",1,"Rocks",[["Rye whiskey",30],["Cognac",30],["Sweet vermouth",30],["Bénédictine",5],["Angostura bitters",1,"m","dash"],["Peychaud's bitters",1,"m","dash"]],"Stir with ice, strain over a large cube. Lemon twist."),
+R("Toronto",0,"Coupe",[["Rye whiskey",60],["Fernet-Branca",7],["Simple syrup",5,"m"],["Angostura bitters",2,"m","dashes"]],"Stir with ice and strain. Orange twist."),
+R("Tipperary",1,"Coupe",[["Irish whiskey",50],["Sweet vermouth",25],["Green Chartreuse",15],["Angostura bitters",2,"m","dashes"]],"Stir with ice and strain."),
+R("Irish Mule",0,"Copper mug",[["Irish whiskey",45],["Lime juice",15,"m"],["Ginger beer",120,"m"]],"Build over ice and stir."),
+R("Brandy Crusta",1,"Wine glass",[["Cognac",50],["Triple sec",10],["Maraschino liqueur",10],["Lemon juice",15,"m"],["Simple syrup",5,"m"],["Angostura bitters",2,"m","dashes"]],"Shake with ice and strain into a sugar-rimmed glass lined with a long lemon peel."),
+R("Champagne Cocktail",1,"Flute",[["Champagne",90],["Cognac",10],["Sugar",1,"m","cube"],["Angostura bitters",2,"m","dashes"]],"Soak the sugar cube in bitters, drop into the flute, add cognac, top with champagne."),
+R("French Connection",1,"Rocks",[["Cognac",35],["Amaretto",35]],"Build over ice and stir."),
+R("Jack Rose",0,"Coupe",[["Brandy",60],["Lemon juice",20,"m"],["Grenadine",15,"m"]],"Shake with ice and strain. Best with apple brandy if you have it."),
+R("Brandy Sour",0,"Rocks",[["Brandy",50],["Lemon juice",25,"m"],["Simple syrup",15,"m"]],"Shake with ice and strain over fresh ice."),
+R("Cape Codder",0,"Highball",[["Vodka",45],["Cranberry juice",120,"m"],["Lime wedge",1,"m"]],"Build over ice, squeeze in lime."),
+R("Greyhound",0,"Highball",[["Vodka",45],["Grapefruit juice",120,"m"]],"Build over ice. Add a salt rim and it's a Salty Dog."),
+R("Sea Breeze",1,"Highball",[["Vodka",40],["Cranberry juice",120,"m"],["Grapefruit juice",30,"m"]],"Build over ice and stir."),
+R("Bay Breeze",0,"Highball",[["Vodka",45],["Cranberry juice",90,"m"],["Pineapple juice",90,"m"]],"Build over ice and stir."),
+R("Madras",0,"Highball",[["Vodka",45],["Cranberry juice",90,"m"],["Orange juice",60,"m"]],"Build over ice and stir."),
+R("Kamikaze",1,"Coupe",[["Vodka",30],["Triple sec",30],["Lime juice",30,"m"]],"Equal parts. Shake with ice and strain."),
+R("Harvey Wallbanger",1,"Highball",[["Vodka",45],["Galliano",15],["Orange juice",90,"m"]],"Vodka and orange juice over ice, float the Galliano on top."),
+R("Godmother",1,"Rocks",[["Vodka",35],["Amaretto",35]],"Build over ice and stir."),
+R("Caipiroska",0,"Rocks",[["Vodka",60],["Lime",1,"m","whole, cut in wedges"],["Sugar",4,"m","tsp"]],"Muddle lime and sugar, add vodka and crushed ice, stir."),
+R("Vodka Gimlet",0,"Coupe",[["Vodka",60],["Lime cordial",20,"m"]],"Shake or stir with ice, strain into a chilled coupe."),
+R("Vodka Tonic",0,"Highball",[["Vodka",50],["Tonic water",150,"m"]],"Build over ice, lime wedge."),
+R("Dirty Martini",0,"Martini",[["Vodka",60],["Dry vermouth",10],["Olive brine",15,"m"]],"Stir with ice and strain. Olives."),
+R("French Martini",1,"Coupe",[["Vodka",45],["Crème de mûre",15],["Pineapple juice",15,"m"]],"Shake hard with ice for a foamy top and strain. Raspberry liqueur (Chambord) is the classic."),
+R("Russian Spring Punch",1,"Highball",[["Vodka",25],["Crème de cassis",15],["Lemon juice",25,"m"],["Simple syrup",10,"m"],["Champagne",90]],"Shake vodka, cassis, lemon and syrup with ice, strain into a tall glass with ice, top with champagne."),
+R("Toasted Almond",0,"Rocks",[["Amaretto",30],["Coffee liqueur",30],["Cream",60,"m"]],"Shake with ice and strain over ice."),
+R("Golden Dream",1,"Coupe",[["Galliano",20],["Triple sec",20],["Orange juice",20,"m"],["Cream",10,"m"]],"Shake with ice and strain."),
+R("Fernandito",1,"Highball",[["Fernet-Branca",50],["Cola",120,"m"]],"Fernet over ice, top with cola."),
+R("Nutty Irishman",0,"Rocks",[["Irish cream",30],["Frangelico",30]],"Build over ice, or add cream for a longer drink."),
+R("Baby Guinness",0,"Shot",[["Coffee liqueur",30],["Irish cream",10]],"Pour coffee liqueur, float Irish cream on top over a spoon."),
+R("Alabama Slammer",0,"Highball",[["Southern Comfort",30],["Amaretto",15],["Gin",15],["Orange juice",60,"m"]],"Shake with ice and strain over ice."),
+R("Porto Flip",1,"Coupe",[["Port",45],["Brandy",15],["Egg yolk",1,"m"]],"Shake hard with ice, strain, grate nutmeg."),
+R("Sherry Cobbler",0,"Wine glass",[["Sherry",90],["Simple syrup",15,"m"],["Orange slices",2,"m"]],"Shake sherry, syrup and orange with ice, pour unstrained over crushed ice. Berries and mint."),
+R("Bamboo",0,"Coupe",[["Sherry",45],["Dry vermouth",45],["Orange bitters",1,"m","dash"],["Angostura bitters",1,"m","dash"]],"Stir with ice and strain. Lemon twist."),
+R("Adonis",0,"Coupe",[["Sherry",45],["Sweet vermouth",45],["Orange bitters",2,"m","dashes"]],"Stir with ice and strain. Orange twist."),
+R("Lillet Spritz",0,"Wine glass",[["Lillet blanc",60],["Tonic water",90,"m"],["Cucumber slices",2,"m"]],"Build over ice, top with tonic."),
+R("Sake Mojito",0,"Highball",[["Sake",60],["Lime juice",20,"m"],["Simple syrup",15,"m"],["Mint leaves",6,"m","leaves"],["Soda water",60,"m"]],"Muddle mint, add sake, lime and syrup, crushed ice, top with soda."),
+R("Soju Highball",0,"Highball",[["Soju",45],["Lemonade",120,"m"]],"Build over ice, lemon wheel."),
+R("Texas Fizz",0,"Highball",[["Gin",45],["Orange juice",15,"m"],["Lemon juice",15,"m"],["Grenadine",5,"m"],["Soda water",90,"m"]],"Shake gin, juices and grenadine with ice, strain into a highball over ice, top with soda. Lemon twist."),
+R("Texas Fizz (Ritz)",0,"Highball",[["Gin",30],["Orange juice",30,"m"],["Grenadine",7,"m"],["Champagne",120]],"Frank Meier's Paris Ritz version. Shake gin, orange juice and grenadine, strain over broken ice, top with champagne. Orange slice."),
+R("Texas Ramos Gin Fizz",0,"Highball",[["Gin",45],["Triple sec",15],["Cream",60,"m"],["Simple syrup",15,"m"],["Lemon juice",10,"m"],["Egg white",1,"m"],["Soda water",30,"m"]],"The Brennan's of Houston twist on the Ramos: orange liqueur in place of some citrus. Dry shake hard, shake with ice, strain and top with soda."),
+R("Sloe Gin Fizz",0,"Highball",[["Sloe gin",60],["Lemon juice",30,"m"],["Simple syrup",15,"m"],["Soda water",60,"m"]],"Shake sloe gin, lemon and syrup with ice, strain into a tall glass, top with soda."),
+R("Diamond Fizz",0,"Highball",[["Gin",45],["Lemon juice",30,"m"],["Simple syrup",15,"m"],["Champagne",60]],"A gin fizz topped with champagne instead of soda. Shake the first three, strain, top."),
+R("Silver Fizz",0,"Highball",[["Gin",45],["Lemon juice",30,"m"],["Simple syrup",15,"m"],["Egg white",1,"m"],["Soda water",60,"m"]],"Dry shake, shake with ice, strain into a chilled glass without ice, top with soda."),
+R("Golden Fizz",0,"Highball",[["Gin",45],["Lemon juice",30,"m"],["Simple syrup",15,"m"],["Egg yolk",1,"m"],["Soda water",60,"m"]],"As a Silver Fizz but with the yolk. Dry shake, shake with ice, strain, top with soda."),
+R("Gin Gin Mule",0,"Highball",[["Gin",45],["Lime juice",22,"m"],["Simple syrup",22,"m"],["Mint leaves",6,"m","leaves"],["Ginger beer",30,"m"]],"Muddle mint with lime and syrup, add gin, shake, strain over ice, top with ginger beer."),
+R("White Lady",1,"Coupe",[["Gin",40],["Triple sec",30],["Lemon juice",20,"m"],["Egg white",1,"m","optional"]],"Shake with ice (dry shake first with egg white) and strain."),
+R("Pink Lady",0,"Coupe",[["Gin",45],["Lemon juice",15,"m"],["Grenadine",15,"m"],["Egg white",1,"m"]],"Dry shake, shake with ice, strain into a coupe."),
+R("Bronx",0,"Coupe",[["Gin",45],["Sweet vermouth",15],["Dry vermouth",15],["Orange juice",30,"m"]],"Shake with ice and strain. Orange twist."),
+R("Gibson",0,"Martini",[["Gin",60],["Dry vermouth",10],["Cocktail onions",2,"m"]],"Stir with ice, strain, garnish with pickled onions."),
+R("Twentieth Century",0,"Coupe",[["Gin",45],["Lillet blanc",22],["Crème de cacao",15],["Lemon juice",22,"m"]],"Shake with ice and strain. Lemon twist."),
+R("Jasmine",0,"Coupe",[["Gin",45],["Campari",7],["Triple sec",7],["Lemon juice",22,"m"]],"Shake with ice and strain. Tastes uncannily of pink grapefruit."),
+R("Pegu Club",0,"Coupe",[["Gin",60],["Triple sec",22],["Lime juice",22,"m"],["Angostura bitters",1,"m","dash"],["Orange bitters",1,"m","dash"]],"Shake with ice and strain."),
+R("Eastside",0,"Coupe",[["Gin",60],["Lime juice",22,"m"],["Simple syrup",22,"m"],["Mint leaves",6,"m","leaves"],["Cucumber slices",3,"m"]],"Muddle cucumber and mint, add the rest, shake, double-strain."),
+R("Enzoni",0,"Rocks",[["Gin",30],["Campari",30],["Lemon juice",22,"m"],["Simple syrup",15,"m"],["Green grapes",5,"m","muddled"]],"Muddle grapes, add everything else, shake, strain over fresh ice."),
+R("London Mule",0,"Copper mug",[["Gin",45],["Lime juice",15,"m"],["Ginger beer",120,"m"]],"Build over ice, stir, lime wedge."),
+R("Gin Daisy",0,"Rocks",[["Gin",60],["Lemon juice",20,"m"],["Grenadine",10,"m"],["Soda water",30,"m"]],"Shake gin, lemon and grenadine, strain over crushed ice, splash of soda."),
+R("Old Pal",0,"Coupe",[["Rye whiskey",30],["Campari",30],["Dry vermouth",30]],"Stir with ice and strain. Lemon twist."),
+R("Remember the Maine",0,"Coupe",[["Rye whiskey",60],["Sweet vermouth",22],["Cherry liqueur",7],["Absinthe",2,"o","dashes"]],"Stir with ice and strain."),
+R("Scofflaw",0,"Coupe",[["Rye whiskey",45],["Dry vermouth",30],["Lemon juice",20,"m"],["Grenadine",15,"m"]],"Shake with ice and strain."),
+R("Ward Eight",0,"Coupe",[["Rye whiskey",60],["Lemon juice",20,"m"],["Orange juice",20,"m"],["Grenadine",10,"m"]],"Shake with ice and strain."),
+R("Algonquin",0,"Coupe",[["Rye whiskey",45],["Dry vermouth",22],["Pineapple juice",22,"m"]],"Shake with ice and strain."),
+R("Brooklyn",0,"Coupe",[["Rye whiskey",60],["Dry vermouth",22],["Maraschino liqueur",7],["Amaro",7]],"Stir with ice and strain."),
+R("Greenpoint",0,"Coupe",[["Rye whiskey",60],["Yellow Chartreuse",15],["Sweet vermouth",15],["Angostura bitters",1,"m","dash"],["Orange bitters",1,"m","dash"]],"Stir with ice and strain. Lemon twist."),
+R("Red Hook",0,"Coupe",[["Rye whiskey",60],["Sweet vermouth",15],["Maraschino liqueur",7]],"Stir with ice and strain. Cherry."),
+R("Rattlesnake",0,"Coupe",[["Rye whiskey",60],["Lemon juice",22,"m"],["Simple syrup",15,"m"],["Egg white",1,"m"],["Absinthe",2,"o","dashes"]],"Dry shake, shake with ice, strain."),
+R("Presbyterian",0,"Highball",[["Whisky (any)",45],["Ginger ale",60,"m"],["Soda water",60,"m"]],"Build over ice, half ginger ale, half soda."),
+R("Mamie Taylor",0,"Highball",[["Scotch whisky",50],["Lime juice",15,"m"],["Ginger beer",120,"m"]],"Build over ice, stir."),
+R("Tequila Sour",0,"Rocks",[["Tequila",50],["Lemon juice",25,"m"],["Simple syrup",15,"m"],["Egg white",1,"m","optional"]],"Shake and strain over ice."),
+R("Tequila Old Fashioned",0,"Rocks",[["Tequila",60],["Agave syrup",7,"m"],["Angostura bitters",2,"m","dashes"]],"Stir with ice, strain over a large cube, orange peel."),
+R("Brave Bull",0,"Rocks",[["Tequila",50],["Coffee liqueur",25]],"Build over ice and stir."),
+R("Rosita",0,"Rocks",[["Tequila",45],["Campari",15],["Sweet vermouth",15],["Dry vermouth",15],["Angostura bitters",1,"m","dash"]],"Stir with ice, strain over fresh ice."),
+R("Bloody Maria",0,"Highball",[["Tequila",45],["Tomato juice",90,"m"],["Lime juice",15,"m"],["Worcestershire sauce",2,"m","dashes"],["Tabasco",2,"m","dashes"],["Salt & pepper",0,"m"]],"Roll with ice between two glasses, don't shake. Lime and a chilli."),
+R("Juan Collins",0,"Highball",[["Tequila",45],["Lemon juice",30,"m"],["Simple syrup",15,"m"],["Soda water",60,"m"]],"Shake tequila, lemon and syrup, strain over ice, top with soda."),
+R("Mexican Firing Squad",0,"Highball",[["Tequila",60],["Lime juice",22,"m"],["Grenadine",15,"m"],["Angostura bitters",3,"m","dashes"],["Soda water",30,"m"]],"Shake the first four with ice, strain over ice, splash of soda."),
+R("Division Bell",0,"Coupe",[["Mezcal",30],["Aperol",22],["Maraschino liqueur",15],["Lime juice",22,"m"]],"Shake with ice and strain. Grapefruit twist."),
+R("Mezcal Negroni",0,"Rocks",[["Mezcal",30],["Campari",30],["Sweet vermouth",30]],"Stir with ice, strain over a large cube, orange peel."),
+R("Kingston Negroni",0,"Rocks",[["Dark rum",30],["Campari",30],["Sweet vermouth",30]],"Stir with ice, strain over a large cube. Best with a funky Jamaican rum."),
+R("El Presidente",0,"Coupe",[["White rum",45],["Dry vermouth",22],["Orange curaçao",7],["Grenadine",5,"m"]],"Stir with ice and strain. Orange twist."),
+R("Mary Pickford",0,"Coupe",[["White rum",45],["Pineapple juice",45,"m"],["Maraschino liqueur",7],["Grenadine",5,"m"]],"Shake with ice and strain."),
+R("Airmail",0,"Flute",[["White rum",45],["Lime juice",15,"m"],["Honey syrup",15,"m"],["Champagne",60]],"Shake rum, lime and honey with ice, strain into a flute, top with champagne."),
+R("Old Cuban",0,"Coupe",[["Dark rum",45],["Lime juice",22,"m"],["Simple syrup",22,"m"],["Mint leaves",6,"m","leaves"],["Angostura bitters",2,"m","dashes"],["Champagne",60]],"Shake rum, lime, syrup, mint and bitters, double-strain into a coupe, top with champagne."),
+R("Rum Sour",0,"Rocks",[["Dark rum",50],["Lemon juice",25,"m"],["Simple syrup",15,"m"],["Egg white",1,"m","optional"]],"Shake and strain over ice."),
+R("Honey Bee",0,"Coupe",[["White rum",60],["Lemon juice",22,"m"],["Honey syrup",22,"m"]],"Shake with ice and strain."),
+R("Bahama Mama",0,"Highball",[["Dark rum",30],["Coconut rum",30],["Coffee liqueur",15],["Pineapple juice",90,"m"],["Lemon juice",15,"m"]],"Shake with ice and strain over ice. Pineapple wedge."),
+R("Blue Hawaiian",0,"Hurricane",[["White rum",30],["Blue curaçao",30],["Pineapple juice",60,"m"],["Coconut cream",30,"m"]],"Blend with crushed ice or shake hard and pour."),
+R("Scorpion",0,"Rocks",[["White rum",45],["Brandy",30],["Orange juice",45,"m"],["Lemon juice",30,"m"],["Orgeat syrup",15,"m"]],"Shake with ice, pour over crushed ice. A tiki bowl classic scaled to one."),
+R("Fog Cutter",0,"Highball",[["White rum",45],["Gin",15],["Brandy",15],["Orange juice",30,"m"],["Lemon juice",30,"m"],["Orgeat syrup",15,"m"],["Sherry",15]],"Shake everything except sherry, pour over crushed ice, float the sherry."),
+R("Navy Grog",0,"Rocks",[["Dark rum",30],["White rum",30],["Lime juice",22,"m"],["Grapefruit juice",22,"m"],["Honey syrup",22,"m"],["Soda water",30,"m"]],"Shake with ice, strain over crushed ice, splash of soda."),
+R("Knickerbocker",0,"Rocks",[["White rum",60],["Raspberry syrup",15,"m"],["Lemon juice",15,"m"],["Triple sec",7]],"Shake with ice, strain over crushed ice."),
+R("Malibu Sunset",0,"Highball",[["Coconut rum",45],["Pineapple juice",90,"m"],["Orange juice",30,"m"],["Grenadine",10,"m"]],"Build over ice, add grenadine last so it sinks."),
+R("Chilcano",0,"Highball",[["Pisco",50],["Lime juice",15,"m"],["Ginger ale",120,"m"],["Angostura bitters",2,"m","dashes"]],"Build over ice and stir."),
+R("B&B",0,"Snifter",[["Brandy",30],["Bénédictine",30]],"Stir gently, serve neat or over ice."),
+R("Metropolitan",0,"Coupe",[["Brandy",45],["Sweet vermouth",22],["Simple syrup",5,"m"],["Angostura bitters",2,"m","dashes"]],"Stir with ice and strain."),
+R("Vodka Sour",0,"Rocks",[["Vodka",50],["Lemon juice",25,"m"],["Simple syrup",15,"m"],["Egg white",1,"m","optional"]],"Shake and strain over ice."),
+R("Chi-Chi",0,"Hurricane",[["Vodka",50],["Coconut cream",30,"m"],["Pineapple juice",50,"m"]],"A Piña Colada with vodka. Blend with crushed ice."),
+R("Woo Woo",0,"Highball",[["Vodka",30],["Peach schnapps",30],["Cranberry juice",90,"m"]],"Build over ice and stir."),
+R("Fuzzy Navel",0,"Highball",[["Peach schnapps",45],["Orange juice",120,"m"]],"Build over ice and stir."),
+R("Melon Ball",0,"Highball",[["Midori",30],["Vodka",30],["Pineapple juice",90,"m"]],"Shake with ice, strain over ice."),
+R("Japanese Slipper",0,"Coupe",[["Midori",30],["Cointreau",30],["Lemon juice",30,"m"]],"Shake with ice and strain. An Australian classic."),
+R("Mind Eraser",0,"Rocks",[["Vodka",30],["Coffee liqueur",30],["Soda water",60,"m"]],"Layer over ice: coffee liqueur, vodka, soda. Drink through a straw from the bottom."),
+R("Dirty Shirley",0,"Highball",[["Vodka",45],["Grenadine",15,"m"],["Lemonade",120,"m"]],"Build over ice, stir, cherries."),
+R("Death in the Afternoon",0,"Flute",[["Absinthe",30],["Champagne",120]],"Absinthe in a flute, top slowly with champagne until it clouds."),
+R("Seelbach",0,"Flute",[["Bourbon",30],["Triple sec",15],["Angostura bitters",4,"m","dashes"],["Peychaud's bitters",4,"m","dashes"],["Champagne",90]],"Stir bourbon, triple sec and bitters with ice, strain into a flute, top with champagne."),
+R("Campari Soda",0,"Highball",[["Campari",50],["Soda water",120,"m"]],"Build over ice, orange slice."),
+R("Aperol Sour",0,"Rocks",[["Aperol",60],["Lemon juice",25,"m"],["Simple syrup",10,"m"],["Egg white",1,"m","optional"]],"Shake and strain over ice."),
+R("Paradise",0,"Coupe",[["Gin",35],["Apricot brandy",20],["Orange juice",20,"m"]],"Shake with ice and strain."),
+R("Angel Face",1,"Coupe",[["Gin",30],["Apricot brandy",30],["Brandy",30]],"Equal parts. Stir with ice and strain. Apple brandy is traditional."),
+R("Hot Buttered Rum",0,"Mug",[["Dark rum",60],["Butter",1,"m","tsp"],["Brown sugar",1,"m","tsp"],["Hot water",120,"m"]],"Muddle butter and sugar in the mug, add rum, top with hot water, grate nutmeg."),
+R("Glögg",0,"Mug",[["Red wine",150],["Port",30,"o"],["Aquavit",20],["Sugar",2,"m","tsp"],["Raisins",1,"m","tbsp"],["Blanched almonds",1,"m","tbsp"],["Cinnamon, cloves, cardamom & orange peel",0,"m"]],"Warm the wine, port, sugar and spices gently for 20 minutes — never boil. Add the aquavit (or vodka/brandy) off the heat. Serve in small cups with a spoonful of raisins and almonds in each."),
+R("Mulled Wine",0,"Mug",[["Red wine",150],["Brandy",20],["Orange slices",2,"m"],["Sugar",2,"m","tsp"],["Cinnamon & cloves",0,"m"]],"Warm gently with spices and orange — never boil. Add the brandy off the heat."),
+R("Rum Hot Toddy",0,"Mug",[["Dark rum",45],["Honey",15,"m"],["Lemon juice",15,"m"],["Hot water",120,"m"]],"Stir honey into hot water, add rum and lemon."),
+R("Limoncello Spritz",0,"Wine glass",[["Limoncello",50],["Prosecco",90],["Soda water",30,"m"]],"Build over ice, lemon wheel and mint."),
+];
+</script>
+<script>
+// ---------- State & storage ----------
+const KEY='homebar.v1';
+let S={inv:{},order:[],drinks:1,ratings:{},imgs:{},extra:[]};
+let mem=null;
+async function load(){
+  try{ if(window.storage){ const r=await window.storage.get(KEY,false); if(r&&r.value){S=Object.assign(S,JSON.parse(r.value));return;} } }catch(e){}
+  try{ const v=localStorage.getItem(KEY); if(v) S=Object.assign(S,JSON.parse(v)); }catch(e){}
+}
+let saveT;
+function save(){ clearTimeout(saveT); saveT=setTimeout(async()=>{
+  const v=JSON.stringify(S);
+  try{ if(window.storage){ await window.storage.set(KEY,v,false); return; } }catch(e){}
+  try{ localStorage.setItem(KEY,v); }catch(e){ mem=v; }
+},150); }
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const GLASS=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color:var(--amber)"><path d="M5 3h14l-7 9v7M8 21h8M6.5 6.5h11"/></svg>`;
+
+// ---------- Matching ----------
+let BAKED=[];
+function allRecipes(){ return LIBRARY.concat(BAKED,S.extra); }
+async function loadBaked(){
+  try{ const r=await fetch('cocktaildb.json',{cache:'force-cache'}); if(!r.ok)return false; const raw=await r.json();
+    const known=new Set(LIBRARY.map(r=>r.name.toLowerCase())); BAKED=[];
+    for(const x of raw){ const k=x.strDrink.toLowerCase(); if(known.has(k))continue; known.add(k); BAKED.push(convert(x)); }
+    return BAKED.length>0; }catch(e){ return false; }
+}
+function have(name){
+  const cands=[name].concat(SUBS[name]||[]); let best=null;
+  for(const c of cands){ if(c in S.inv && (!best||S.inv[c]>best.ml)) best={name:c,ml:S.inv[c]}; }
+  return best;
+}
+function evaluate(rec){
+  const miss=[],short=[];
+  for(const i of rec.ing){
+    if(i.t==='a'){ const h=have(i.n); if(!h)miss.push(i.n); else if(h.ml<i.q*S.drinks)short.push(i.n); }
+    else if(i.t==='m'&&MIXER_SET.has(i.n)){ const h=have(i.n); if(!h)miss.push(i.n); else if(!i.note&&i.q>0&&h.ml<i.q*S.drinks)short.push(i.n); }
+  }
+  const status= miss.length? (miss.length===1?'miss1':'no') : (short.length?'low':'ok');
+  return {status,miss,short};
+}
+
+// ---------- Quantities ----------
+const UNITS=/^(tsp|leaves|dash|dashes|cube|whole|half|optional|rinse|splash|on the side|lightly whipped)/;
+function fmtQ(i){
+  const q=i.q*S.drinks;
+  if(i.q===0) return i.note||'to taste';
+  if(i.note&&UNITS.test(i.note)) return `${q} ${i.note}`;
+  if(i.note&&/^(whole|half)/.test(i.note)) return `${q} ${i.note}`;
+  return `${q} ml`+(i.note?` <small>(${esc(i.note)})</small>`:'');
+}
+
+// ---------- Pills ----------
+function renderPills(){
+  const el=$('#pills'); el.innerHTML='';
+  const spirits=S.order.filter(n=>!MIXER_SET.has(n)), mixers=S.order.filter(n=>MIXER_SET.has(n));
+  const mk=(n,isMix)=>{
+    const ml=S.inv[n]; const pct=Math.min(100,ml/(isMix?1000:750)*100);
+    const b=document.createElement('div'); b.className='pill'+(isMix?' mix':'');
+    b.innerHTML=`<span class="fill ${ml<100?'low':''}" style="width:${pct}%"></span><button class="t" aria-label="Adjust ${esc(n)}"><span>${esc(n)}</span><small>~${ml} ml</small></button><button class="x" aria-label="Remove ${esc(n)}">×</button>`;
+    b.querySelector('.t').onclick=()=>openAmount(n);
+    b.querySelector('.x').onclick=()=>{ delete S.inv[n]; S.order=S.order.filter(x=>x!==n); save(); refresh(); };
+    el.appendChild(b);
+  };
+  spirits.forEach(n=>mk(n,false));
+  if(mixers.length){ const br=document.createElement('div'); br.className='break'; el.appendChild(br); mixers.forEach(n=>mk(n,true)); }
+  const add=document.createElement('button'); add.className='pill add'; add.textContent='+ Add a bottle'; add.onclick=openAdd; el.appendChild(add);
+  $('#bar-sub').textContent= S.order.length? `${S.order.length} bottle${S.order.length>1?'s':''} on the shelf — tap one to adjust`:'Add your spirits and mixers — cocktails you can make appear below';
+  $('#dn').textContent=S.drinks; $('#dn').nextSibling.textContent=S.drinks>1?' drinks':' drink';
+}
+
+// ---------- Cards ----------
+function card(rec,ev,extraMeta){
+  const b=document.createElement('button'); b.className='card';
+  const img=S.imgs[rec.name]||rec.img;
+  const spirits=rec.ing.filter(i=>i.t!=='m').map(i=>i.n).join(', ');
+  const chip= !ev?'' : ev.status==='ok'?`<span class="chip ok">Ready</span>` : ev.status==='low'?`<span class="chip low">Low on ${esc(ev.short[0])}</span>` : ev.status==='miss1'?`<span class="chip miss">Needs ${esc(ev.miss[0])}</span>`:`<span class="chip miss">Needs ${ev.miss.length}</span>`;
+  const stars=S.ratings[rec.name]?`<span class="stars">${'★'.repeat(S.ratings[rec.name])}</span>`:'';
+  b.innerHTML=`<div class="thumb">${img?`<img src="${esc(img)}" alt="" loading="lazy">`:GLASS}</div><div class="body"><div class="name"><span>${esc(rec.name)}</span>${rec.iba?'<span class="iba">IBA</span>':''}${stars}</div><div class="meta">${esc(extraMeta||spirits)}</div></div>${chip}`;
+  b.onclick=()=>openDetail(rec);
+  return b;
+}
+
+// ---------- Matches on My bar ----------
+function renderMatches(){
+  const el=$('#matches'); el.innerHTML='';
+  if(!S.order.length){ el.innerHTML='<div class="empty">Nothing on the shelf yet. Add your spirits and the mixers you have (juices, soda, tonic) to see what you can make.</div>'; return; }
+  const groups={ok:[],low:[],miss1:[],no:[]};
+  for(const r of allRecipes()){ const ev=evaluate(r); if(groups[ev.status]) groups[ev.status].push([r,ev]); }
+  const titles={ok:['Ready to make','everything on hand'],low:['Running low','not enough for '+S.drinks+(S.drinks>1?' drinks':' drink')],miss1:['One bottle short','worth a shopping trip'],no:['Further off','two or more missing']};
+  let any=false;
+  for(const k of ['ok','low','miss1','no']){
+    if(!groups[k].length)continue; any=true;
+    const h=document.createElement('div'); h.className='sec'; h.innerHTML=`<h2>${titles[k][0]}</h2><span>${groups[k].length} · ${titles[k][1]}</span>`; el.appendChild(h);
+    const l=document.createElement('div'); l.className='list';
+    groups[k].sort((a,b)=>a[1].miss.length-b[1].miss.length||(S.ratings[b[0].name]||0)-(S.ratings[a[0].name]||0)||a[0].name.localeCompare(b[0].name));
+    const items=groups[k]; const cap=k==='no'?12:Infinity;
+    const draw=(n)=>{ l.innerHTML=''; items.slice(0,n).forEach(([r,ev])=>l.appendChild(card(r,ev,k==='no'?'Missing: '+ev.miss.join(', '):undefined)));
+      if(items.length>n){ const m=document.createElement('button'); m.className='more'; m.textContent=`Show all ${items.length}`; m.onclick=()=>draw(Infinity); l.appendChild(m); } };
+    draw(cap);
+    el.appendChild(l);
+  }
+  if(!any) el.innerHTML='<div class="empty">No cocktail can be made from just these yet. Check the "One bottle short" ideas, or add a mixer like lime juice or soda water.</div>';
+  groups.ok.slice(0,10).forEach(([r])=>fetchImage(r,true));
+}
+
+// ---------- All cocktails ----------
+function renderAll(){
+  const q=$('#q-all').value.trim().toLowerCase(); const el=$('#all-list'); el.innerHTML='';
+  const list=allRecipes().filter(r=>!q||r.name.toLowerCase().includes(q)||r.ing.some(i=>i.n.toLowerCase().includes(q)||(SUBS[i.n]||[]).some(s=>s.toLowerCase().includes(q))))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+  $('#all-sub').textContent=`${allRecipes().length} recipes${q?`, ${list.length} match`:''}`;
+  if(!list.length){ el.innerHTML='<div class="empty">No match in your library. Try the Explore tab to search online.</div>'; return; }
+  for(const r of list) el.appendChild(card(r,S.order.length?evaluate(r):null));
+}
+
+// ---------- TheCocktailDB ----------
+const API='https://www.thecocktaildb.com/api/json/v1/1/';
+let webMode='name';
+async function api(path){
+  const c=new AbortController(); const t=setTimeout(()=>c.abort(),8000);
+  try{ const r=await fetch(API+path,{signal:c.signal}); if(!r.ok)throw new Error(r.status); return await r.json(); }
+  finally{ clearTimeout(t); }
+}
+const imgQueue=new Set();
+async function fetchImage(rec,quiet){
+  if(S.imgs[rec.name]||rec.img||imgQueue.has(rec.name))return; imgQueue.add(rec.name);
+  try{ const d=await api('search.php?s='+encodeURIComponent(rec.name.replace(/['’]/g,'')));
+    const hit=(d.drinks||[]).find(x=>x.strDrink.toLowerCase()===rec.name.toLowerCase())||(d.drinks||[])[0];
+    if(hit){ S.imgs[rec.name]=hit.strDrinkThumb; S.imgs[rec.name+'#id']=hit.idDrink; save(); if(!quiet)return hit; }
+  }catch(e){ if(!quiet)throw e; }
+  finally{ imgQueue.delete(rec.name); }
+}
+function toMl(m){
+  if(!m)return{q:0,note:''}; m=m.trim().toLowerCase();
+  let s=m.replace(/[½¼¾⅓⅔]/g,c=>' '+({'½':.5,'¼':.25,'¾':.75,'⅓':.33,'⅔':.67}[c])+' ').replace(/(\d+(?:\.\d+)?)\s*-\s*\d+(?:\.\d+)?/,'$1');
+  let num=0; const nums=s.match(/\d+(?:\.\d+)?(?:\s*\/\s*\d+)?/g)||[];
+  for(const n of nums){ if(n.includes('/')){const [a,b]=n.split('/').map(Number);num+=a/b;} else num+=parseFloat(n); }
+  if(/oz/.test(m))return{q:Math.round(num*30)};
+  if(/\bcl\b/.test(m))return{q:Math.round(num*10)};
+  if(/\bml\b/.test(m))return{q:Math.round(num)};
+  if(/dash/.test(m))return{q:Math.max(1,Math.round(num||1)),note:'dashes'};
+  if(/tsp|teaspoon|bar ?spoon/.test(m))return{q:Math.round((num||1)*5)};
+  if(/tbsp|tablespoon/.test(m))return{q:Math.round((num||1)*15)};
+  if(/shot|jigger/.test(m))return{q:Math.round((num||1)*45)};
+  if(/part/.test(m))return{q:Math.round((num||1)*30)};
+  if(/cup/.test(m))return{q:Math.round((num||1)*240)};
+  if(/top|fill/.test(m))return{q:100,note:'top up'};
+  if(/splash/.test(m))return{q:10,note:'splash'};
+  if(num)return{q:Math.round(num*30),note:m};
+  return{q:0,note:m};
+}
+const SPIRIT_LC=Object.fromEntries(SPIRITS.map(s=>[s.toLowerCase(),s]));
+function convert(d){
+  const ing=[];
+  for(let k=1;k<=15;k++){ const n=d['strIngredient'+k]; if(!n||!n.trim())continue;
+    const lc=n.trim().toLowerCase(); const canon=NORMALISE[lc]||SPIRIT_LC[lc]; const {q,note}=toMl(d['strMeasure'+k]);
+    if(canon) ing.push({n:canon,q:q||30,t:'a',note:note||''});
+    else ing.push({n:MIXNORM[lc]||n.trim(),q,t:'m',note:note||''}); }
+  return {name:d.strDrink,iba:0,glass:d.strGlass||'',ing,method:d.strInstructions||'',src:'TheCocktailDB',id:d.idDrink,img:d.strDrinkThumb};
+}
+async function importAll(quiet){
+  const btn=$('#import'), note=$('#import-note'); btn.disabled=true; if(quiet) note.textContent='Loading the full catalogue in the background…';
+  const letters='abcdefghijklmnopqrstuvwxyz'.split(''); const known=new Set(allRecipes().map(r=>r.name.toLowerCase())); let added=0;
+  try{
+    for(let i=0;i<letters.length;i++){
+      note.textContent=`Importing… ${Math.round(i/letters.length*100)}%`;
+      let d; try{ d=await api('search.php?f='+letters[i]); }catch(e){ continue; }
+      for(const x of d.drinks||[]){ if(known.has(x.strDrink.toLowerCase()))continue; known.add(x.strDrink.toLowerCase()); S.extra.push(convert(x)); added++; }
+    }
+    S.autoImported=true; save(); note.textContent=`Imported ${added} recipes. They're stored on this device and included in your stock matching.`; refresh();
+  }catch(e){ note.textContent=quiet?'':'Import stopped — check your connection and try again.'; }
+  btn.disabled=false; renderImport();
+}
+function renderImport(){
+  const n=S.extra.length; const b=$('#import'), c=$('#clear');
+  $('#baked-note').textContent= BAKED.length?`${BAKED.length} TheCocktailDB recipes are bundled with this app and work offline.`:'';
+  b.textContent= BAKED.length?'Fetch any new TheCocktailDB additions':(n>50?`Re-sync TheCocktailDB (${n} imported)`:'Import the whole TheCocktailDB catalogue (~600 drinks)');
+  c.hidden=!n; c.textContent=`Remove ${n} imported recipe${n===1?'':'s'}`;
+}
+async function webSearch(){
+  const q=$('#q-web').value.trim(); const el=$('#web-list'); const note=$('#web-note'); if(!q)return;
+  el.innerHTML=''; note.textContent='Searching…';
+  try{
+    const d=await api((webMode==='name'?'search.php?s=':'filter.php?i=')+encodeURIComponent(q));
+    const drinks=d.drinks||[]; note.textContent=drinks.length?`${drinks.length} result${drinks.length>1?'s':''}`:'Nothing found. Try a simpler word, e.g. "rum".';
+    for(const x of drinks.slice(0,60)){
+      const b=document.createElement('button'); b.className='card';
+      b.innerHTML=`<div class="thumb"><img src="${esc(x.strDrinkThumb)}/preview" alt="" loading="lazy"></div><div class="body"><div class="name">${esc(x.strDrink)}</div><div class="meta">${esc(x.strCategory||'Tap for the recipe')}</div></div>`;
+      b.onclick=async()=>{ note.textContent='Loading recipe…'; try{ const full=x.strInstructions?x:(await api('lookup.php?i='+x.idDrink)).drinks[0]; const rec=convert(full);
+        if(!S.extra.some(r=>r.id===rec.id)){ S.extra.push(rec); save(); } note.textContent=''; openDetail(rec); }catch(e){ note.textContent='Could not load that recipe. Check your connection.'; } };
+      el.appendChild(b);
+    }
+  }catch(e){ note.textContent='Online search needs an internet connection (it may also be blocked inside a preview). Your built-in library still works.'; }
+}
+
+// ---------- Detail ----------
+let current=null;
+function openDetail(rec){
+  current=rec; const el=$('#detail'); el.classList.add('on'); el.scrollTop=0; renderDetail();
+  if(!S.imgs[rec.name]&&!rec.img) fetchImage(rec,true).then(()=>{ if(current===rec)renderDetail(); });
+}
+function renderDetail(){
+  const rec=current; if(!rec)return; const el=$('#detail'); const img=S.imgs[rec.name]||rec.img;
+  const ev=S.order.length?evaluate(rec):null; const rating=S.ratings[rec.name]||0;
+  const id=rec.id||S.imgs[rec.name+'#id'];
+  const rows=rec.ing.map(i=>{ let cls='',tag='';
+    if(i.t==='a'&&ev){ const h=have(i.n); if(!h){cls='miss';tag='not on shelf';} else if(h.ml<i.q*S.drinks){cls='short';tag=`only ~${h.ml} ml`;} else if(h.name!==i.n){tag=`using ${h.name}`;} }
+    if(i.t==='m'&&MIXER_SET.has(i.n)&&S.order.length){ const h=have(i.n); if(h){ if(!i.note&&i.q>0&&h.ml<i.q*S.drinks){cls='short';tag=`only ~${h.ml} ml`;} else tag='on shelf'; } else {cls='miss';tag='not on shelf';} }
+    if(i.t==='o')tag=tag||'optional';
+    return `<li class="${cls}"><span>${esc(i.n)}${tag?`<span class="tag">${esc(tag)}</span>`:''}</span><span class="q">${fmtQ(i)}</span></li>`; }).join('');
+  el.innerHTML=`<div class="hero">${img?`<img src="${esc(img)}" alt="${esc(rec.name)}">`:GLASS}<button class="back" id="back">‹ Back</button></div>
+  <div class="dbody"><h2>${esc(rec.name)}</h2><div class="meta">${esc(rec.glass||'')}${rec.iba?' · IBA official':''} · ${rec.src==='built-in'?'Classic':'TheCocktailDB'}</div>
+  <div class="drow"><span>Makes</span><div class="stepper"><button id="ddm">−</button><span><b>${S.drinks}</b> ${S.drinks>1?'drinks':'drink'}</span><button id="ddp">+</button></div></div>
+  <ul class="ing">${rows}</ul>
+  <div class="method">${esc(rec.method)}</div>
+  <div class="drow"><span>Your rating</span><div class="rate">${[1,2,3,4,5].map(n=>`<button data-r="${n}" class="${n<=rating?'on':''}" aria-label="${n} star">★</button>`).join('')}</div></div>
+  ${id?`<a class="linkbtn" target="_blank" rel="noopener" href="https://www.thecocktaildb.com/drink/${esc(id)}">View on TheCocktailDB</a>`:''}</div>`;
+  $('#back').onclick=()=>{ el.classList.remove('on'); current=null; };
+  $('#ddm').onclick=()=>setDrinks(S.drinks-1); $('#ddp').onclick=()=>setDrinks(S.drinks+1);
+  el.querySelectorAll('.rate button').forEach(b=>b.onclick=()=>{ const n=+b.dataset.r; S.ratings[rec.name]=S.ratings[rec.name]===n?0:n; save(); renderDetail(); refresh(); });
+}
+
+// ---------- Sheets ----------
+function showSheet(html){ $('#sheet').innerHTML='<div class="grab"></div>'+html; $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); }
+function hideSheet(){ $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); }
+$('#scrim').onclick=hideSheet;
+
+function openAdd(){
+  showSheet(`<h3>Add a bottle</h3><div class="hint">Type to filter, or scroll and tap</div><div class="combo"><input id="combo" placeholder="e.g. Gin" autocomplete="off" autocapitalize="words"></div><div class="options" id="opts"></div>`);
+  const inp=$('#combo'), opts=$('#opts');
+  const draw=()=>{ const q=inp.value.trim().toLowerCase(); opts.innerHTML='';
+    const groups=Object.assign({"Spirits & liqueurs":SPIRITS},MIXER_GROUPS);
+    for(const [g,items] of Object.entries(groups)){
+      const list=items.filter(s=>s.toLowerCase().includes(q)); if(!list.length)continue;
+      const h=document.createElement('div'); h.className='ogrp'; h.textContent=g; opts.appendChild(h);
+      for(const s of list){ const b=document.createElement('button'); const has=s in S.inv; b.className=has?'have':''; b.textContent=has?`${s} — already on shelf (~${S.inv[s]} ml), tap to adjust`:s; b.onclick=()=>openAmount(s,!has); opts.appendChild(b); }
+    }
+    if(q&&!SPIRITS.concat(MIXERS).some(s=>s.toLowerCase()===q)){ const b=document.createElement('button'); b.className='custom'; const name=inp.value.trim().replace(/^\w/,c=>c.toUpperCase()); b.textContent=`Add "${name}"`; b.onclick=()=>openAmount(name,true); opts.appendChild(b); }
+  };
+  inp.oninput=draw; draw(); setTimeout(()=>inp.focus(),250);
+}
+
+function openAmount(name,isNew){
+  const isMix=MIXER_SET.has(name); const full=isMix?1000:700, max=isMix?2000:1200;
+  let ml= name in S.inv ? S.inv[name] : full;
+  const presets=isMix?[["Empty",0],["Can (330)",330],["1 L",1000],["2 L",2000]]:[["Empty",0],["¼ bottle",180],["½ bottle",350],["Full",700]];
+  showSheet(`<h3>${isNew?`Add ${esc(name)}`:esc(name)}</h3><div class="hint">${isNew?'Set roughly how much you have, then confirm':'Adjust how much is left, then save'}</div>
+  <div class="big"><span id="ml">${ml}</span><small>ml</small></div><div class="approx" id="approx"></div>
+  <div class="gauge"><i id="gauge"></i></div>
+  <input type="range" id="rng" min="0" max="${max}" step="10" value="${ml}" aria-label="Amount">
+  <div class="presets">${presets.map(([l,v])=>`<button data-v="${v}">${l}</button>`).join('')}</div>
+  <div class="nudge"><button data-d="-50">−50 ml</button><button data-d="-10">−10</button><button data-d="10">+10</button><button data-d="50">+50 ml</button><button data-d="1000" data-set="1">1 L</button></div>
+  <button class="primary" id="ok"></button>
+  <div class="links"><button class="link" id="cancel">Cancel</button>${isNew?'':'<button class="link danger" id="rm">Remove from shelf</button>'}</div>`);
+  const rng=$('#rng'), out=$('#ml'), g=$('#gauge'), ap=$('#approx');
+  const upd=v=>{ ml=Math.max(0,Math.min(max,Math.round(v/10)*10)); rng.value=ml; out.textContent=ml; g.style.width=Math.min(100,ml/full*100)+'%';
+    $('#ok').textContent= isNew?`Add ${name} with ${ml} ml`:`Save ${name} at ${ml} ml`;
+    const f=ml/full; ap.textContent= ml===0?'Empty — time to restock' : f<.15?'A dribble — one or two drinks' : f<.4?'About a third left' : f<.75?'Around half left' : f<=1.05?'Nearly full' : 'More than one bottle'; };
+  rng.oninput=()=>upd(+rng.value); upd(ml);
+  $('#sheet').querySelectorAll('.presets button').forEach(b=>b.onclick=()=>upd(+b.dataset.v));
+  $('#sheet').querySelectorAll('.nudge button').forEach(b=>b.onclick=()=>upd(b.dataset.set?+b.dataset.d:ml+ +b.dataset.d));
+  $('#ok').onclick=()=>{ S.inv[name]=ml; if(!S.order.includes(name))S.order.push(name); save(); hideSheet(); refresh(); };
+  $('#cancel').onclick=hideSheet;
+  const rm=$('#rm'); if(rm) rm.onclick=()=>{ delete S.inv[name]; S.order=S.order.filter(x=>x!==name); save(); hideSheet(); refresh(); };
+}
+
+// ---------- Wiring ----------
+function setDrinks(n){ S.drinks=Math.max(1,Math.min(24,n)); save(); refresh(); if(current)renderDetail(); }
+$('#dm').onclick=()=>setDrinks(S.drinks-1); $('#dp').onclick=()=>setDrinks(S.drinks+1);
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b)); document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id==='s-'+b.dataset.tab)); window.scrollTo(0,0); });
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x===b)); webMode=b.dataset.mode; $('#q-web').placeholder=webMode==='name'?'e.g. Negroni':'e.g. Tequila'; if($('#q-web').value)webSearch(); });
+$('#q-all').oninput=renderAll;
+let wt; $('#q-web').oninput=()=>{ clearTimeout(wt); wt=setTimeout(webSearch,500); }; $('#q-web').onkeydown=e=>{ if(e.key==='Enter'){ clearTimeout(wt); webSearch(); e.target.blur(); } };
+$('#import').onclick=importAll;
+$('#clear').onclick=()=>{ if(confirm('Remove all imported recipes? Your built-in classics stay.')){ S.extra=[]; save(); refresh(); renderImport(); $('#import-note').textContent=''; } };
+function refresh(){ renderPills(); renderMatches(); renderAll(); renderImport(); }
+load().then(async()=>{ refresh(); const baked=await loadBaked(); refresh();
+  if(!baked && !S.autoImported && S.extra.length<50 && navigator.onLine) importAll(true); });
+if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
