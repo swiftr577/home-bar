@@ -190,7 +190,7 @@ input[type=range]{width:100%;height:44px;accent-color:var(--amber);margin:4px 0 
     <div class="list" id="web-list"></div>
     <div class="sec"><h2>Offline library</h2></div>
     <p class="note" id="baked-note"></p>
-    <p class="note">Every drink from TheCocktailDB is stored on this phone so it works offline and shows up in My bar and All cocktails. Measures are converted to ml automatically.</p>
+    <p class="note">Bundled recipes come from the IBA official list, the Death &amp; Co / Cocktail Recipes dataset and TheCocktailDB. They work offline and show up in My bar and All cocktails; measures are converted to ml automatically.</p>
     <button class="more" id="import">Import the whole TheCocktailDB catalogue</button>
     <div class="note" id="import-note"></div>
     <button class="link danger" id="clear" hidden></button>
@@ -509,10 +509,12 @@ const GLASS=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-w
 let BAKED=[];
 function allRecipes(){ return LIBRARY.concat(BAKED,S.extra); }
 async function loadBaked(){
-  try{ const r=await fetch('cocktaildb.json',{cache:'force-cache'}); if(!r.ok)return false; const raw=await r.json();
-    const known=new Set(LIBRARY.map(r=>r.name.toLowerCase())); BAKED=[];
-    for(const x of raw){ const k=x.strDrink.toLowerCase(); if(known.has(k))continue; known.add(k); BAKED.push(convert(x)); }
-    return BAKED.length>0; }catch(e){ return false; }
+  const known=new Set(LIBRARY.map(r=>r.name.toLowerCase())); BAKED=[];
+  const take=(list,conv)=>{ for(const x of list){ const rec=conv(x); const k=rec.name.toLowerCase(); if(known.has(k))continue; known.add(k); BAKED.push(rec); } };
+  for(const [file,conv] of [['library.json',convertGeneric],['cocktaildb.json',convert]]){
+    try{ const r=await fetch(file,{cache:'force-cache'}); if(!r.ok)continue; take(await r.json(),conv); return true; }catch(e){}
+  }
+  return false;
 }
 function have(name){
   const cands=[name].concat(SUBS[name]||[]); let best=null;
@@ -565,7 +567,8 @@ function card(rec,ev,extraMeta){
   const spirits=rec.ing.filter(i=>i.t!=='m').map(i=>i.n).join(', ');
   const chip= !ev?'' : ev.status==='ok'?`<span class="chip ok">Ready</span>` : ev.status==='low'?`<span class="chip low">Low on ${esc(ev.short[0])}</span>` : ev.status==='miss1'?`<span class="chip miss">Needs ${esc(ev.miss[0])}</span>`:`<span class="chip miss">Needs ${ev.miss.length}</span>`;
   const stars=S.ratings[rec.name]?`<span class="stars">${'★'.repeat(S.ratings[rec.name])}</span>`:'';
-  b.innerHTML=`<div class="thumb">${img?`<img src="${esc(img)}" alt="" loading="lazy">`:GLASS}</div><div class="body"><div class="name"><span>${esc(rec.name)}</span>${rec.iba?'<span class="iba">IBA</span>':''}${stars}</div><div class="meta">${esc(extraMeta||spirits)}</div></div>${chip}`;
+  const srcTag=(rec.src&&rec.src!=='built-in'&&rec.src!=='TheCocktailDB')?`<span class="iba">${esc(rec.src)}</span>`:'';
+  b.innerHTML=`<div class="thumb">${img?`<img src="${esc(img)}" alt="" loading="lazy">`:GLASS}</div><div class="body"><div class="name"><span>${esc(rec.name)}</span>${rec.iba?'<span class="iba">IBA</span>':''}${srcTag}${stars}</div><div class="meta">${esc(extraMeta||spirits)}</div></div>${chip}`;
   b.onclick=()=>openDetail(rec);
   return b;
 }
@@ -640,13 +643,29 @@ function toMl(m){
   return{q:0,note:m};
 }
 const SPIRIT_LC=Object.fromEntries(SPIRITS.map(s=>[s.toLowerCase(),s]));
+// Every name we know, longest first, so "ginger beer" beats "gin" and "coffee liqueur" beats "coffee"
+const KNOWN=(()=>{ const m=[];
+  for(const [k,v] of Object.entries(NORMALISE)) m.push([k,v,'a']);
+  for(const s of SPIRITS) m.push([s.toLowerCase(),s,'a']);
+  for(const [k,v] of Object.entries(MIXNORM)) m.push([k,v,'m']);
+  for(const s of MIXERS) m.push([s.toLowerCase(),s,'m']);
+  const seen=new Set(); return m.filter(([k])=>!seen.has(k)&&seen.add(k)).sort((a,b)=>b[0].length-a[0].length)
+    .map(([k,v,t])=>[new RegExp('(^|[^a-z])'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^a-z])','i'),v,t]); })();
+function resolve(raw){
+  const lc=raw.trim().toLowerCase().replace(/^(fresh(ly)?( squeezed)?|chilled|cold|hot|good|quality|premium|dry|london dry|aged|blanco|silver|reposado|añejo|anejo)\s+/,'');
+  if(NORMALISE[lc])return {n:NORMALISE[lc],t:'a'}; if(SPIRIT_LC[lc])return {n:SPIRIT_LC[lc],t:'a'}; if(MIXNORM[lc])return {n:MIXNORM[lc],t:'m'};
+  for(const [re,v,t] of KNOWN) if(re.test(lc)) return {n:v,t};
+  return {n:raw.trim(),t:'m'};
+}
+function convertGeneric(x){
+  const ing=x.ingredients.map(i=>{ const r=resolve(i.name); const {q,note}=toMl(i.measure);
+    return r.t==='a'?{n:r.n,q:q||30,t:'a',note:note||''}:{n:r.n,q,t:'m',note:note||''}; });
+  return {name:x.name,iba:x.iba?1:0,glass:x.glass||'',ing,method:x.instructions||'',src:x.source||'bundle',id:x.id,img:x.image||''};
+}
 function convert(d){
-  const ing=[];
-  for(let k=1;k<=15;k++){ const n=d['strIngredient'+k]; if(!n||!n.trim())continue;
-    const lc=n.trim().toLowerCase(); const canon=NORMALISE[lc]||SPIRIT_LC[lc]; const {q,note}=toMl(d['strMeasure'+k]);
-    if(canon) ing.push({n:canon,q:q||30,t:'a',note:note||''});
-    else ing.push({n:MIXNORM[lc]||n.trim(),q,t:'m',note:note||''}); }
-  return {name:d.strDrink,iba:0,glass:d.strGlass||'',ing,method:d.strInstructions||'',src:'TheCocktailDB',id:d.idDrink,img:d.strDrinkThumb};
+  const ingredients=[];
+  for(let k=1;k<=15;k++){ const n=d['strIngredient'+k]; if(n&&n.trim()) ingredients.push({name:n.trim(),measure:d['strMeasure'+k]||''}); }
+  return convertGeneric({name:d.strDrink,source:'TheCocktailDB',glass:d.strGlass,ingredients,instructions:d.strInstructions,image:d.strDrinkThumb,id:d.idDrink});
 }
 async function importAll(quiet){
   const btn=$('#import'), note=$('#import-note'); btn.disabled=true; if(quiet) note.textContent='Loading the full catalogue in the background…';
@@ -663,7 +682,9 @@ async function importAll(quiet){
 }
 function renderImport(){
   const n=S.extra.length; const b=$('#import'), c=$('#clear');
-  $('#baked-note').textContent= BAKED.length?`${BAKED.length} TheCocktailDB recipes are bundled with this app and work offline.`:'';
+  const by={}; for(const r of BAKED) by[r.src]=(by[r.src]||0)+1;
+  const top=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([s,n])=>`${s} ${n}`).join(', ');
+  $('#baked-note').textContent= BAKED.length?`${BAKED.length} recipes are bundled with this app and work offline (${top}${Object.keys(by).length>4?', …':''}).`:'';
   b.textContent= BAKED.length?'Fetch any new TheCocktailDB additions':(n>50?`Re-sync TheCocktailDB (${n} imported)`:'Import the whole TheCocktailDB catalogue (~600 drinks)');
   c.hidden=!n; c.textContent=`Remove ${n} imported recipe${n===1?'':'s'}`;
 }
@@ -699,7 +720,7 @@ function renderDetail(){
     if(i.t==='o')tag=tag||'optional';
     return `<li class="${cls}"><span>${esc(i.n)}${tag?`<span class="tag">${esc(tag)}</span>`:''}</span><span class="q">${fmtQ(i)}</span></li>`; }).join('');
   el.innerHTML=`<div class="hero">${img?`<img src="${esc(img)}" alt="${esc(rec.name)}">`:GLASS}<button class="back" id="back">‹ Back</button></div>
-  <div class="dbody"><h2>${esc(rec.name)}</h2><div class="meta">${esc(rec.glass||'')}${rec.iba?' · IBA official':''} · ${rec.src==='built-in'?'Classic':'TheCocktailDB'}</div>
+  <div class="dbody"><h2>${esc(rec.name)}</h2><div class="meta">${esc(rec.glass||'')}${rec.iba?' · IBA official':''} · ${rec.src==='built-in'?'Classic':esc(rec.src)}</div>
   <div class="drow"><span>Makes</span><div class="stepper"><button id="ddm">−</button><span><b>${S.drinks}</b> ${S.drinks>1?'drinks':'drink'}</span><button id="ddp">+</button></div></div>
   <ul class="ing">${rows}</ul>
   <div class="method">${esc(rec.method)}</div>
