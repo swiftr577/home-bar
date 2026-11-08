@@ -85,9 +85,9 @@ input{font:inherit;color:inherit}
 .list{display:flex;flex-direction:column;gap:8px}
 .card{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:10px 12px 10px 10px;border-radius:14px;background:var(--bg2);border:1px solid var(--line)}
 .card:active{background:var(--amber-soft)}
-.thumb{width:54px;height:54px;border-radius:10px;background:var(--amber-soft);flex:none;object-fit:cover;display:grid;place-items:center;overflow:hidden}
+.thumb{position:relative;width:54px;height:54px;border-radius:10px;background:var(--amber-soft);flex:none;display:grid;place-items:center;overflow:hidden}
 .thumb svg{width:30px;height:30px}
-.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .card .body{flex:1;min-width:0;overflow:hidden}
 .card .name{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card .tags{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin:2px 0}
@@ -126,11 +126,11 @@ input{font:inherit;color:inherit}
 /* detail overlay */
 .detail{position:fixed;inset:0;background:var(--bg);z-index:10;overflow-y:auto;display:none;-webkit-overflow-scrolling:touch}
 .detail.on{display:block}
-.hero{position:relative;height:300px;background:var(--amber-soft);display:grid;place-items:center}
-.hero img{width:100%;height:100%;object-fit:cover}
+.hero{position:relative;height:300px;background:var(--amber-soft);display:grid;place-items:center;overflow:hidden}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .hero svg{width:90px;height:90px}
 .back{position:absolute;top:calc(10px + env(safe-area-inset-top));left:12px;height:40px;padding:0 14px 0 10px;border-radius:999px;background:rgba(20,32,27,.72);color:#f1ebdd;display:flex;align-items:center;gap:4px;font-size:15px;backdrop-filter:blur(8px)}
-.dbody{padding:18px 18px calc(40px + env(safe-area-inset-bottom))}
+.dbody{position:relative;background:var(--bg);padding:18px 18px calc(40px + env(safe-area-inset-bottom))}
 .dbody h2{font-size:30px;line-height:1.1;margin-bottom:4px}
 .dbody .meta{color:var(--ink2);font-size:14px;margin-bottom:14px}
 .drow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0}
@@ -219,6 +219,8 @@ input[type=range]{width:100%;height:44px;accent-color:var(--amber);margin:4px 0 
     <button class="more" id="import">Import the whole TheCocktailDB catalogue</button>
     <div class="note" id="import-note"></div>
     <button class="link danger" id="clear" hidden></button>
+    <div class="sec"><h2>Housekeeping</h2></div>
+    <button class="link danger" id="reset-made">Reset all "made" counts to zero</button>
     <div class="ver" id="ver-web"></div>
   </section>
 
@@ -514,7 +516,7 @@ R("Limoncello Spritz",0,"Wine glass",[["Limoncello",50],["Prosecco",90],["Soda w
 <script>
 // ---------- State & storage ----------
 const KEY='homebar.v1';
-const APP_VERSION='1.5.0';
+const APP_VERSION='1.5.2';
 let S={inv:{},order:[],drinks:1,ratings:{},imgs:{},extra:[],consume:true,made:{}};
 let mem=null;
 async function load(){
@@ -792,12 +794,16 @@ function renderDetail(){
   <div class="method">${esc(rec.method)}</div>
   <div class="made"><div class="row"><button class="primary" id="made" style="height:46px">I made this${S.drinks>1?` (${S.drinks} drinks)`:''}</button></div>
   <label class="switch"><input type="checkbox" id="consume" ${S.consume?'checked':''}><span>Take the amounts off my shelf</span></label>
+  ${S.made[rec.name]?`<div class="done" style="color:var(--ink2)">You've made this ${S.made[rec.name]} time${S.made[rec.name]===1?'':'s'}<button id="made-minus">−1</button><button id="made-clear">Clear</button></div>`:''}
   <div class="done" id="made-note"></div></div>
   <div class="drow"><span>Your rating</span><div class="rate">${[1,2,3,4,5].map(n=>`<button data-r="${n}" class="${n<=rating?'on':''}" aria-label="${n} star">★</button>`).join('')}</div></div>
   ${id?`<a class="linkbtn" target="_blank" rel="noopener" href="https://www.thecocktaildb.com/drink/${esc(id)}">View on TheCocktailDB</a>`:''}</div>`;
   $('#back').onclick=()=>{ el.classList.remove('on'); current=null; };
   $('#consume').onchange=e=>{ S.consume=e.target.checked; save(); };
   $('#made').onclick=()=>madeThis(rec);
+  const mm=$('#made-minus'), mc=$('#made-clear');
+  if(mm) mm.onclick=()=>{ S.made[rec.name]=Math.max(0,(S.made[rec.name]||0)-1); if(!S.made[rec.name])delete S.made[rec.name]; lastMade=null; save(); refresh(); renderDetail(); };
+  if(mc) mc.onclick=()=>{ delete S.made[rec.name]; lastMade=null; save(); refresh(); renderDetail(); };
   $('#ddm').onclick=()=>setDrinks(S.drinks-1); $('#ddp').onclick=()=>setDrinks(S.drinks+1);
   el.querySelectorAll('.rate button').forEach(b=>b.onclick=()=>{ const n=+b.dataset.r; S.ratings[rec.name]=S.ratings[rec.name]===n?0:n; save(); renderDetail(); refresh(); });
 }
@@ -870,6 +876,7 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.qu
 document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x===b)); webMode=b.dataset.mode; $('#q-web').placeholder=webMode==='name'?'e.g. Negroni':'e.g. Tequila'; if($('#q-web').value)webSearch(); });
 $('#q-all').oninput=renderAll;
 $('#fbtn').onclick=openFilter;
+$('#reset-made').onclick=()=>{ const n=Object.values(S.made).reduce((a,b)=>a+b,0); if(!n){ alert('No drinks recorded as made yet.'); return; } if(confirm(`Reset ${n} "made" record${n===1?'':'s'} to zero? Your shelf and ratings are untouched.`)){ S.made={}; lastMade=null; save(); refresh(); } };
 let wt; $('#q-web').oninput=()=>{ clearTimeout(wt); wt=setTimeout(webSearch,500); }; $('#q-web').onkeydown=e=>{ if(e.key==='Enter'){ clearTimeout(wt); webSearch(); e.target.blur(); } };
 $('#import').onclick=importAll;
 $('#clear').onclick=()=>{ if(confirm('Remove all imported recipes? Your built-in classics stay.')){ S.extra=[]; save(); refresh(); renderImport(); $('#import-note').textContent=''; } };
