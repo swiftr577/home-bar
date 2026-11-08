@@ -111,6 +111,11 @@ input{font:inherit;color:inherit}
 .checks label:last-child{border:0}
 .checks input{width:22px;height:22px;accent-color:var(--amber);margin:0}
 .checks small{margin-left:auto;color:var(--ink2)}
+.qr{display:grid;place-items:center;margin:10px 0 14px}
+.qr canvas,.qr img{background:#fff;padding:12px;border-radius:14px;max-width:70vw}
+.incoming{list-style:none;margin:8px 0 14px;padding:0;max-height:30vh;overflow-y:auto}
+.incoming li{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:15px}
+.incoming li span:last-child{color:var(--ink2)}
 .sheet .lbl{font-size:13px;color:var(--ink2);margin-top:6px}
 .seg{display:flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px}
 .seg button{flex:1;height:38px;font-size:14px;color:var(--ink2)}
@@ -194,6 +199,7 @@ input[type=range]{width:100%;height:44px;accent-color:var(--amber);margin:4px 0 
       <div class="stepper" aria-label="Number of drinks"><button id="dm">−</button><span><b id="dn">1</b> drink</span><button id="dp">+</button></div>
     </div>
     <div class="pills" id="pills"></div>
+    <div class="links" style="margin:-6px 0 14px"><button class="link" id="share">Share my shelf</button></div>
     <div id="matches"></div>
     <div class="ver" id="ver-bar"></div>
   </section>
@@ -516,7 +522,7 @@ R("Limoncello Spritz",0,"Wine glass",[["Limoncello",50],["Prosecco",90],["Soda w
 <script>
 // ---------- State & storage ----------
 const KEY='homebar.v1';
-const APP_VERSION='1.5.2';
+const APP_VERSION='1.6.0';
 let S={inv:{},order:[],drinks:1,ratings:{},imgs:{},extra:[],consume:true,made:{}};
 let mem=null;
 async function load(){
@@ -825,6 +831,44 @@ function madeThis(rec){
   $('#undo').onclick=()=>{ if(!lastMade)return; S.made[lastMade.rec]=Math.max(0,(S.made[lastMade.rec]||1)-1); for(const [n,a] of lastMade.taken) if(n in S.inv) S.inv[n]+=a; lastMade=null; save(); refresh(); renderDetail(); };
 }
 
+// ---------- Share shelf (link / QR / AirDrop) ----------
+const ALLNAMES=SPIRITS.concat(MIXERS);
+function encodeShelf(){
+  const parts=S.order.map(n=>{ const i=ALLNAMES.indexOf(n); return (i>=0?i:'~'+encodeURIComponent(n))+':'+S.inv[n]; });
+  return location.origin+location.pathname+'#shelf='+parts.join(',');
+}
+function decodeShelf(hash){
+  const m=hash.match(/#shelf=(.*)$/); if(!m)return null; const out=[];
+  for(const p of m[1].split(',')){ const [k,v]=p.split(':'); if(k===undefined||v===undefined)continue;
+    const name=k.startsWith('~')?decodeURIComponent(k.slice(1)):ALLNAMES[+k]; const ml=parseInt(v,10);
+    if(name&&!isNaN(ml)) out.push([name,ml]); }
+  return out;
+}
+function openShare(){
+  if(!S.order.length){ alert('Nothing on the shelf to share yet.'); return; }
+  const url=encodeShelf();
+  showSheet(`<h3>Share my shelf</h3><div class="hint">${S.order.length} bottle${S.order.length>1?'s':''} with current amounts. Nothing is uploaded — it all travels inside the link.</div>
+  <div class="qr" id="qr"><div class="note">Making QR code…</div></div>
+  <button class="primary" id="share-link">Share link (AirDrop, Messages…)</button>
+  <div class="links"><button class="link" id="copy-link">Copy link</button><button class="link" id="share-close">Close</button></div>`);
+  $('#share-close').onclick=hideSheet;
+  $('#copy-link').onclick=async()=>{ try{ await navigator.clipboard.writeText(url); $('#copy-link').textContent='Copied'; }catch(e){ prompt('Copy this link:',url); } };
+  $('#share-link').onclick=async()=>{ if(navigator.share){ try{ await navigator.share({title:'My home bar shelf',url}); }catch(e){} } else { try{ await navigator.clipboard.writeText(url); alert('Link copied — paste it to whoever needs it.'); }catch(e){ prompt('Copy this link:',url); } } };
+  const draw=()=>{ try{ const q=qrcode(0,'M'); q.addData(url); q.make(); $('#qr').innerHTML=q.createImgTag(4,12); $('#qr').querySelector('img').style.maxWidth='70vw'; $('#qr').querySelector('img').style.height='auto'; }catch(e){ $('#qr').innerHTML='<div class="note">Too much to fit in a QR code — use the link instead.</div>'; } };
+  if(window.qrcode) draw(); else { const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; s.onload=draw; s.onerror=()=>{ $('#qr').innerHTML='<div class="note">QR needs a connection the first time — the link button still works.</div>'; }; document.head.appendChild(s); }
+}
+function offerIncoming(items){
+  const rows=items.map(([n,ml])=>`<li><span>${esc(n)}${n in S.inv?'':' <small style="color:var(--amber)">new</small>'}</span><span>${ml} ml${n in S.inv&&S.inv[n]!==ml?` (you: ${S.inv[n]})`:''}</span></li>`).join('');
+  showSheet(`<h3>Shelf received</h3><div class="hint">Someone shared ${items.length} bottle${items.length>1?'s':''} with you. How do you want to use it?</div>
+  <ul class="incoming">${rows}</ul>
+  <button class="primary" id="inc-merge">Merge — update these, keep my other bottles</button>
+  <div class="links"><button class="link danger" id="inc-replace">Replace my whole shelf</button><button class="link" id="inc-skip">Ignore</button></div>`);
+  const apply=(replace)=>{ if(replace){ S.inv={}; S.order=[]; } for(const [n,ml] of items){ S.inv[n]=ml; if(!S.order.includes(n))S.order.push(n); } save(); hideSheet(); refresh(); };
+  $('#inc-merge').onclick=()=>apply(false); $('#inc-replace').onclick=()=>{ if(confirm('Replace everything on your shelf with the shared list?')) apply(true); }; $('#inc-skip').onclick=hideSheet;
+}
+function checkIncoming(){ const items=decodeShelf(location.hash); if(items&&items.length){ history.replaceState(null,'',location.pathname); offerIncoming(items); } }
+window.addEventListener('hashchange',checkIncoming);
+
 // ---------- Sheets ----------
 function showSheet(html){ $('#sheet').innerHTML='<div class="grab"></div>'+html; $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); }
 function hideSheet(){ $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); }
@@ -876,13 +920,14 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.qu
 document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x===b)); webMode=b.dataset.mode; $('#q-web').placeholder=webMode==='name'?'e.g. Negroni':'e.g. Tequila'; if($('#q-web').value)webSearch(); });
 $('#q-all').oninput=renderAll;
 $('#fbtn').onclick=openFilter;
+$('#share').onclick=openShare;
 $('#reset-made').onclick=()=>{ const n=Object.values(S.made).reduce((a,b)=>a+b,0); if(!n){ alert('No drinks recorded as made yet.'); return; } if(confirm(`Reset ${n} "made" record${n===1?'':'s'} to zero? Your shelf and ratings are untouched.`)){ S.made={}; lastMade=null; save(); refresh(); } };
 let wt; $('#q-web').oninput=()=>{ clearTimeout(wt); wt=setTimeout(webSearch,500); }; $('#q-web').onkeydown=e=>{ if(e.key==='Enter'){ clearTimeout(wt); webSearch(); e.target.blur(); } };
 $('#import').onclick=importAll;
 $('#clear').onclick=()=>{ if(confirm('Remove all imported recipes? Your built-in classics stay.')){ S.extra=[]; save(); refresh(); renderImport(); $('#import-note').textContent=''; } };
 function refresh(){ renderPills(); renderMatches(); renderAll(); renderImport(); }
 $('#ver-bar').textContent=$('#ver-web').textContent='Home Bar v'+APP_VERSION;
-load().then(async()=>{ refresh(); const baked=await loadBaked(); refresh();
+load().then(async()=>{ refresh(); checkIncoming(); const baked=await loadBaked(); refresh();
   if(!baked && !S.autoImported && S.extra.length<50 && navigator.onLine) importAll(true); });
 if('serviceWorker' in navigator && location.protocol==='https:'){
   navigator.serviceWorker.register('sw.js').then(reg=>{ reg.update(); }).catch(()=>{});
