@@ -102,6 +102,13 @@ input{font:inherit;color:inherit}
 .search input{flex:1;height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg2);padding:0 14px;font-size:16px}
 .fbtn{height:44px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg2);font-size:15px;font-weight:600;color:var(--amber)}
 .fbtn.on{background:var(--amber);color:#fff;border-color:var(--amber)}
+.pills.mini .pill{height:28px;font-size:12px;padding:0 8px 0 9px;gap:3px}
+.pills.mini .pill .x{width:20px;height:20px;font-size:14px}
+.pills.mini .pill .t small{display:none}
+.pills.mini .pill.add{padding:0 10px}
+.pills.mini .break{display:none}
+.scan{position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:1;max-height:50vh;margin:8px 0 12px}
+.scan video{width:100%;height:100%;object-fit:cover;display:block}
 .pills.small{margin:0 0 10px}
 .pills.small .pill{height:32px;font-size:13px;padding-left:10px}
 .pills.small:empty{display:none}
@@ -199,7 +206,7 @@ input[type=range]{width:100%;height:44px;accent-color:var(--amber);margin:4px 0 
       <div class="stepper" aria-label="Number of drinks"><button id="dm">−</button><span><b id="dn">1</b> drink</span><button id="dp">+</button></div>
     </div>
     <div class="pills" id="pills"></div>
-    <div class="links" style="margin:-6px 0 14px"><button class="link" id="share">Share my shelf</button></div>
+    <div class="links" style="margin:-6px 0 14px"><button class="link" id="share">Share / receive shelf</button><button class="link" id="mini"></button></div>
     <div id="matches"></div>
     <div class="ver" id="ver-bar"></div>
   </section>
@@ -522,8 +529,8 @@ R("Limoncello Spritz",0,"Wine glass",[["Limoncello",50],["Prosecco",90],["Soda w
 <script>
 // ---------- State & storage ----------
 const KEY='homebar.v1';
-const APP_VERSION='1.6.0';
-let S={inv:{},order:[],drinks:1,ratings:{},imgs:{},extra:[],consume:true,made:{}};
+const APP_VERSION='1.6.1';
+let S={inv:{},order:[],drinks:1,ratings:{},imgs:{},extra:[],consume:true,made:{},mini:false};
 let mem=null;
 async function load(){
   try{ if(window.storage){ const r=await window.storage.get(KEY,false); if(r&&r.value){S=Object.assign(S,JSON.parse(r.value));return;} } }catch(e){}
@@ -578,7 +585,7 @@ function fmtQ(i){
 
 // ---------- Pills ----------
 function renderPills(){
-  const el=$('#pills'); el.innerHTML='';
+  const el=$('#pills'); el.innerHTML=''; el.classList.toggle('mini',!!S.mini); $('#mini').textContent=S.mini?'Full size':'Minimise'; $('#mini').hidden=S.order.length<4;
   const spirits=S.order.filter(n=>!MIXER_SET.has(n)), mixers=S.order.filter(n=>MIXER_SET.has(n));
   const mk=(n,isMix)=>{
     const ml=S.inv[n]; const pct=Math.min(100,ml/(isMix?1000:750)*100);
@@ -850,8 +857,10 @@ function openShare(){
   showSheet(`<h3>Share my shelf</h3><div class="hint">${S.order.length} bottle${S.order.length>1?'s':''} with current amounts. Nothing is uploaded — it all travels inside the link.</div>
   <div class="qr" id="qr"><div class="note">Making QR code…</div></div>
   <button class="primary" id="share-link">Share link (AirDrop, Messages…)</button>
-  <div class="links"><button class="link" id="copy-link">Copy link</button><button class="link" id="share-close">Close</button></div>`);
-  $('#share-close').onclick=hideSheet;
+  <div class="links"><button class="link" id="copy-link">Copy link</button><button class="link" id="share-close">Close</button></div>
+  <div class="lbl" style="margin-top:18px">Receiving someone else's shelf? Do it here, inside the app, so it updates this copy.</div>
+  <div class="row" style="margin-top:8px"><button class="ghost" style="color:var(--amber);flex:1" id="rx-scan">Scan their QR</button><button class="ghost" style="color:var(--amber);flex:1" id="rx-paste">Paste a link</button></div>`);
+  $('#share-close').onclick=hideSheet; $('#rx-scan').onclick=openScanner; $('#rx-paste').onclick=pasteShelf;
   $('#copy-link').onclick=async()=>{ try{ await navigator.clipboard.writeText(url); $('#copy-link').textContent='Copied'; }catch(e){ prompt('Copy this link:',url); } };
   $('#share-link').onclick=async()=>{ if(navigator.share){ try{ await navigator.share({title:'My home bar shelf',url}); }catch(e){} } else { try{ await navigator.clipboard.writeText(url); alert('Link copied — paste it to whoever needs it.'); }catch(e){ prompt('Copy this link:',url); } } };
   const draw=()=>{ try{ const q=qrcode(0,'M'); q.addData(url); q.make(); $('#qr').innerHTML=q.createImgTag(4,12); $('#qr').querySelector('img').style.maxWidth='70vw'; $('#qr').querySelector('img').style.height='auto'; }catch(e){ $('#qr').innerHTML='<div class="note">Too much to fit in a QR code — use the link instead.</div>'; } };
@@ -866,12 +875,38 @@ function offerIncoming(items){
   const apply=(replace)=>{ if(replace){ S.inv={}; S.order=[]; } for(const [n,ml] of items){ S.inv[n]=ml; if(!S.order.includes(n))S.order.push(n); } save(); hideSheet(); refresh(); };
   $('#inc-merge').onclick=()=>apply(false); $('#inc-replace').onclick=()=>{ if(confirm('Replace everything on your shelf with the shared list?')) apply(true); }; $('#inc-skip').onclick=hideSheet;
 }
+async function pasteShelf(){
+  let text='';
+  try{ text=await navigator.clipboard.readText(); }catch(e){}
+  if(!text) text=prompt('Paste the shared link here:')||'';
+  const items=decodeShelf(text.slice(text.indexOf('#')));
+  if(items&&items.length) offerIncoming(items); else alert('That doesn\'t look like a shared shelf link.');
+}
+let scanStop=null;
+function openScanner(){
+  showSheet(`<h3>Scan a shelf QR</h3><div class="hint">Point the camera at the other phone's QR code.</div><div class="scan"><video id="cam" playsinline muted></video></div><div class="note" id="scan-note">Starting camera…</div><div class="links"><button class="link" id="scan-cancel">Cancel</button></div>`);
+  const stop=()=>{ if(scanStop){scanStop();scanStop=null;} };
+  $('#scan-cancel').onclick=()=>{ stop(); hideSheet(); };
+  const start=async()=>{
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); const v=$('#cam'); v.srcObject=stream; await v.play();
+      const c=document.createElement('canvas'), ctx=c.getContext('2d',{willReadFrequently:true}); let raf;
+      scanStop=()=>{ cancelAnimationFrame(raf); stream.getTracks().forEach(t=>t.stop()); };
+      $('#scan-note').textContent='Looking for a code…';
+      const tick=()=>{ if(v.readyState>=2){ c.width=v.videoWidth; c.height=v.videoHeight; ctx.drawImage(v,0,0); const d=ctx.getImageData(0,0,c.width,c.height); const r=jsQR(d.data,d.width,d.height);
+          if(r&&r.data.includes('#shelf=')){ const items=decodeShelf(r.data.slice(r.data.indexOf('#'))); if(items&&items.length){ stop(); offerIncoming(items); return; } } }
+        raf=requestAnimationFrame(tick); };
+      tick();
+    }catch(e){ $('#scan-note').textContent='Camera not available — use "Paste a link" instead.'; }
+  };
+  if(window.jsQR) start(); else { const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js'; s.onload=start; s.onerror=()=>{ $('#scan-note').textContent='Scanner needs a connection the first time — use "Paste a link" instead.'; }; document.head.appendChild(s); }
+}
 function checkIncoming(){ const items=decodeShelf(location.hash); if(items&&items.length){ history.replaceState(null,'',location.pathname); offerIncoming(items); } }
 window.addEventListener('hashchange',checkIncoming);
 
 // ---------- Sheets ----------
 function showSheet(html){ $('#sheet').innerHTML='<div class="grab"></div>'+html; $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); }
-function hideSheet(){ $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); }
+function hideSheet(){ if(typeof scanStop==='function'&&scanStop){scanStop();scanStop=null;} $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); }
 $('#scrim').onclick=hideSheet;
 
 function openAdd(){
@@ -921,6 +956,7 @@ document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{ document.que
 $('#q-all').oninput=renderAll;
 $('#fbtn').onclick=openFilter;
 $('#share').onclick=openShare;
+$('#mini').onclick=()=>{ S.mini=!S.mini; save(); renderPills(); };
 $('#reset-made').onclick=()=>{ const n=Object.values(S.made).reduce((a,b)=>a+b,0); if(!n){ alert('No drinks recorded as made yet.'); return; } if(confirm(`Reset ${n} "made" record${n===1?'':'s'} to zero? Your shelf and ratings are untouched.`)){ S.made={}; lastMade=null; save(); refresh(); } };
 let wt; $('#q-web').oninput=()=>{ clearTimeout(wt); wt=setTimeout(webSearch,500); }; $('#q-web').onkeydown=e=>{ if(e.key==='Enter'){ clearTimeout(wt); webSearch(); e.target.blur(); } };
 $('#import').onclick=importAll;
