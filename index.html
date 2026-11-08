@@ -88,8 +88,9 @@ input{font:inherit;color:inherit}
 .thumb{width:54px;height:54px;border-radius:10px;background:var(--amber-soft);flex:none;object-fit:cover;display:grid;place-items:center;overflow:hidden}
 .thumb svg{width:30px;height:30px}
 .thumb img{width:100%;height:100%;object-fit:cover}
-.card .body{flex:1;min-width:0}
-.card .name{font-size:17px;display:flex;align-items:center;gap:6px}
+.card .body{flex:1;min-width:0;overflow:hidden}
+.card .name{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .tags{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin:2px 0}
 .card .meta{color:var(--ink2);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chip{font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid currentColor;line-height:1.3;font-weight:600;white-space:nowrap}
 .chip.ok{color:var(--green)}.chip.low{color:var(--amber)}.chip.miss{color:var(--red)}
@@ -99,6 +100,18 @@ input{font:inherit;color:inherit}
 /* search */
 .search{display:flex;gap:8px;margin-bottom:12px}
 .search input{flex:1;height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg2);padding:0 14px;font-size:16px}
+.fbtn{height:44px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg2);font-size:15px;font-weight:600;color:var(--amber)}
+.fbtn.on{background:var(--amber);color:#fff;border-color:var(--amber)}
+.pills.small{margin:0 0 10px}
+.pills.small .pill{height:32px;font-size:13px;padding-left:10px}
+.pills.small:empty{display:none}
+.sheet .seg{margin:6px 0 12px}
+.checks{max-height:38vh;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:var(--bg2);margin:8px 0 14px}
+.checks label{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line);font-size:16px}
+.checks label:last-child{border:0}
+.checks input{width:22px;height:22px;accent-color:var(--amber);margin:0}
+.checks small{margin-left:auto;color:var(--ink2)}
+.sheet .lbl{font-size:13px;color:var(--ink2);margin-top:6px}
 .seg{display:flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px}
 .seg button{flex:1;height:38px;font-size:14px;color:var(--ink2)}
 .seg button.on{background:var(--ink);color:var(--bg)}
@@ -188,7 +201,8 @@ input[type=range]{width:100%;height:44px;accent-color:var(--amber);margin:4px 0 
   <!-- All cocktails -->
   <section class="screen" id="s-all">
     <div class="top"><div><h1>All cocktails</h1><div class="sub" id="all-sub"></div></div></div>
-    <div class="search"><input id="q-all" type="search" placeholder="Name or ingredient, e.g. tequila" autocomplete="off"></div>
+    <div class="search"><input id="q-all" type="search" placeholder="Name or ingredient, e.g. tequila" autocomplete="off"><button class="fbtn" id="fbtn">Filter</button></div>
+    <div class="pills small" id="fpills"></div>
     <div class="list" id="all-list"></div>
   </section>
 
@@ -500,7 +514,7 @@ R("Limoncello Spritz",0,"Wine glass",[["Limoncello",50],["Prosecco",90],["Soda w
 <script>
 // ---------- State & storage ----------
 const KEY='homebar.v1';
-const APP_VERSION='1.4.0';
+const APP_VERSION='1.5.0';
 let S={inv:{},order:[],drinks:1,ratings:{},imgs:{},extra:[],consume:true,made:{}};
 let mem=null;
 async function load(){
@@ -581,7 +595,8 @@ function card(rec,ev,extraMeta){
   const chip= !ev?'' : ev.status==='ok'?`<span class="chip ok">Ready</span>` : ev.status==='low'?`<span class="chip low">Low on ${esc(ev.short[0])}</span>` : ev.status==='miss1'?`<span class="chip miss">Needs ${esc(ev.miss[0])}</span>`:`<span class="chip miss">Needs ${ev.miss.length}</span>`;
   const stars=(S.ratings[rec.name]?`<span class="stars">${'★'.repeat(S.ratings[rec.name])}</span>`:'')+(S.made[rec.name]?`<span class="iba">made ${S.made[rec.name]}×</span>`:'');
   const srcTag=(rec.src&&rec.src!=='built-in'&&rec.src!=='TheCocktailDB')?`<span class="iba">${esc(rec.src)}</span>`:'';
-  b.innerHTML=`<div class="thumb">${img?`<img src="${esc(img)}" alt="" loading="lazy">`:GLASS}</div><div class="body"><div class="name"><span>${esc(rec.name)}</span>${rec.iba?'<span class="iba">IBA</span>':''}${srcTag}${stars}</div><div class="meta">${esc(extraMeta||spirits)}</div></div>${chip}`;
+  const tags=(rec.iba?'<span class="iba">IBA</span>':'')+srcTag+stars;
+  b.innerHTML=`<div class="thumb">${img?`<img src="${esc(img)}" alt="" loading="lazy">`:GLASS}</div><div class="body"><div class="name">${esc(rec.name)}</div>${tags?`<div class="tags">${tags}</div>`:''}<div class="meta">${esc(extraMeta||spirits)}</div></div>${chip}`;
   b.onclick=()=>openDetail(rec);
   return b;
 }
@@ -610,13 +625,51 @@ function renderMatches(){
 }
 
 // ---------- All cocktails ----------
+const F={sort:'az',made:'all',ings:[]};
+function matchesIng(rec,n){ const c=new Set([n].concat(SUBS[n]||[])); return rec.ing.some(i=>c.has(i.n)); }
 function renderAll(){
   const q=$('#q-all').value.trim().toLowerCase(); const el=$('#all-list'); el.innerHTML='';
-  const list=allRecipes().filter(r=>!q||r.name.toLowerCase().includes(q)||r.ing.some(i=>i.n.toLowerCase().includes(q)||(SUBS[i.n]||[]).some(s=>s.toLowerCase().includes(q))))
-    .sort((a,b)=>a.name.localeCompare(b.name));
-  $('#all-sub').textContent=`${allRecipes().length} recipes${q?`, ${list.length} match`:''}`;
-  if(!list.length){ el.innerHTML='<div class="empty">No match in your library. Try the Explore tab to search online.</div>'; return; }
-  for(const r of list) el.appendChild(card(r,S.order.length?evaluate(r):null));
+  let list=allRecipes().filter(r=>!q||r.name.toLowerCase().includes(q)||r.ing.some(i=>i.n.toLowerCase().includes(q)||(SUBS[i.n]||[]).some(s=>s.toLowerCase().includes(q))));
+  if(F.made==='made') list=list.filter(r=>S.made[r.name]); else if(F.made==='new') list=list.filter(r=>!S.made[r.name]);
+  for(const n of F.ings) list=list.filter(r=>matchesIng(r,n));
+  const evs=new Map(); const ev=r=>{ if(!evs.has(r)) evs.set(r,S.order.length?evaluate(r):null); return evs.get(r); };
+  const rank={ok:0,low:1,miss1:2,no:3};
+  if(F.sort==='rating') list.sort((a,b)=>(S.ratings[b.name]||0)-(S.ratings[a.name]||0)||a.name.localeCompare(b.name));
+  else if(F.sort==='made') list.sort((a,b)=>(S.made[b.name]||0)-(S.made[a.name]||0)||a.name.localeCompare(b.name));
+  else if(F.sort==='ready'&&S.order.length) list.sort((a,b)=>{ const x=ev(a),y=ev(b); return rank[x.status]-rank[y.status]||x.miss.length-y.miss.length||a.name.localeCompare(b.name); });
+  else list.sort((a,b)=>a.name.localeCompare(b.name));
+  const active=(F.made!=='all')+(F.ings.length>0)+(F.sort!=='az');
+  $('#fbtn').classList.toggle('on',active>0); $('#fbtn').textContent=active?`Filter · ${active}`:'Filter';
+  const fp=$('#fpills'); fp.innerHTML='';
+  const pill=(label,off)=>{ const d=document.createElement('div'); d.className='pill'; d.innerHTML=`<span class="t">${esc(label)}</span><button class="x" aria-label="Remove filter">×</button>`; d.querySelector('.x').onclick=()=>{off();renderAll();}; fp.appendChild(d); };
+  if(F.made==='made') pill("I've made this",()=>F.made='all'); if(F.made==='new') pill("Haven't made yet",()=>F.made='all');
+  for(const n of F.ings) pill('Has '+n,()=>F.ings=F.ings.filter(x=>x!==n));
+  if(F.sort!=='az') pill('Sorted by '+({rating:'rating',made:'times made',ready:'what I can make'})[F.sort],()=>F.sort='az');
+  $('#all-sub').textContent=`${allRecipes().length} recipes${(q||active)?`, ${list.length} shown`:''}`;
+  if(!list.length){ el.innerHTML='<div class="empty">No match. Loosen the filters, or try the Explore tab to search online.</div>'; return; }
+  for(const r of list) el.appendChild(card(r,ev(r)));
+}
+function openFilter(){
+  const counts={}; for(const r of allRecipes()) for(const i of r.ing) if(SPIRITS.includes(i.n)||MIXER_SET.has(i.n)||i.n==='Whisky (any)') counts[i.n]=(counts[i.n]||0)+1;
+  const names=Object.keys(counts).sort((a,b)=>counts[b]-counts[a]||a.localeCompare(b));
+  const seg=(id,opts,cur)=>`<div class="seg" id="${id}">${opts.map(([v,l])=>`<button data-v="${v}" class="${v===cur?'on':''}">${l}</button>`).join('')}</div>`;
+  showSheet(`<h3>Filter &amp; sort</h3>
+  <div class="lbl">Sort by</div>${seg('f-sort',[['az','A–Z'],['ready','Can make'],['rating','Rating'],['made','Times made']],F.sort)}
+  <div class="lbl">Made it?</div>${seg('f-made',[['all','All'],['made','I made this'],['new',"Haven't made"]],F.made)}
+  <div class="lbl">Must include every ingredient ticked</div>
+  <div class="combo"><input id="f-q" placeholder="Find an ingredient…" autocomplete="off"></div>
+  <div class="checks" id="f-ings"></div>
+  <button class="primary" id="f-apply">Show results</button>
+  <div class="links"><button class="link" id="f-clear">Clear all</button></div>`);
+  for(const id of ['f-sort','f-made']) $('#'+id).querySelectorAll('button').forEach(b=>b.onclick=()=>{ $('#'+id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(id==='f-sort')F.sort=b.dataset.v; else F.made=b.dataset.v; });
+  const box=$('#f-ings'), inp=$('#f-q');
+  const draw=()=>{ const q=inp.value.trim().toLowerCase(); box.innerHTML='';
+    for(const n of names){ if(q&&!n.toLowerCase().includes(q)&&!F.ings.includes(n))continue;
+      const l=document.createElement('label'); l.innerHTML=`<input type="checkbox" ${F.ings.includes(n)?'checked':''}><span>${esc(n)}</span><small>${counts[n]}</small>`;
+      l.querySelector('input').onchange=e=>{ F.ings=e.target.checked?F.ings.concat(n):F.ings.filter(x=>x!==n); }; box.appendChild(l); } };
+  inp.oninput=draw; draw();
+  $('#f-apply').onclick=()=>{ hideSheet(); renderAll(); };
+  $('#f-clear').onclick=()=>{ F.sort='az'; F.made='all'; F.ings=[]; hideSheet(); renderAll(); };
 }
 
 // ---------- TheCocktailDB ----------
@@ -816,6 +869,7 @@ $('#dm').onclick=()=>setDrinks(S.drinks-1); $('#dp').onclick=()=>setDrinks(S.dri
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b)); document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id==='s-'+b.dataset.tab)); window.scrollTo(0,0); });
 document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x===b)); webMode=b.dataset.mode; $('#q-web').placeholder=webMode==='name'?'e.g. Negroni':'e.g. Tequila'; if($('#q-web').value)webSearch(); });
 $('#q-all').oninput=renderAll;
+$('#fbtn').onclick=openFilter;
 let wt; $('#q-web').oninput=()=>{ clearTimeout(wt); wt=setTimeout(webSearch,500); }; $('#q-web').onkeydown=e=>{ if(e.key==='Enter'){ clearTimeout(wt); webSearch(); e.target.blur(); } };
 $('#import').onclick=importAll;
 $('#clear').onclick=()=>{ if(confirm('Remove all imported recipes? Your built-in classics stay.')){ S.extra=[]; save(); refresh(); renderImport(); $('#import-note').textContent=''; } };
@@ -823,7 +877,11 @@ function refresh(){ renderPills(); renderMatches(); renderAll(); renderImport();
 $('#ver-bar').textContent=$('#ver-web').textContent='Home Bar v'+APP_VERSION;
 load().then(async()=>{ refresh(); const baked=await loadBaked(); refresh();
   if(!baked && !S.autoImported && S.extra.length<50 && navigator.onLine) importAll(true); });
-if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator && location.protocol==='https:'){
+  navigator.serviceWorker.register('sw.js').then(reg=>{ reg.update(); }).catch(()=>{});
+  let reloaded=false; navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(navigator.serviceWorker.controller&&!reloaded){ reloaded=true; location.reload(); } });
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') navigator.serviceWorker.getRegistration().then(r=>r&&r.update()); });
+}
 </script>
 </body>
 </html>
