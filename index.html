@@ -529,7 +529,7 @@ R("Limoncello Spritz",0,"Wine glass",[["Limoncello",50],["Prosecco",90],["Soda w
 <script>
 // ---------- State & storage ----------
 const KEY='homebar.v1';
-const APP_VERSION='1.6.1';
+const APP_VERSION='1.6.2';
 let S={inv:{},order:[],drinks:1,ratings:{},imgs:{},extra:[],consume:true,made:{},mini:false};
 let mem=null;
 async function load(){
@@ -852,7 +852,13 @@ function decodeShelf(hash){
   return out;
 }
 function openShare(){
-  if(!S.order.length){ alert('Nothing on the shelf to share yet.'); return; }
+  if(!S.order.length){
+    showSheet(`<h3>Receive a shelf</h3><div class="hint">Your shelf is empty, so there's nothing to share yet — but you can pull in someone else's.</div>
+    <button class="primary" id="rx-scan">Scan their QR code</button>
+    <div class="row" style="margin-top:10px"><button class="ghost" style="color:var(--amber);flex:1" id="rx-paste">Paste a shared link</button></div>
+    <div class="links"><button class="link" id="share-close">Close</button></div>`);
+    $('#share-close').onclick=hideSheet; $('#rx-scan').onclick=openScanner; $('#rx-paste').onclick=pasteShelf; return;
+  }
   const url=encodeShelf();
   showSheet(`<h3>Share my shelf</h3><div class="hint">${S.order.length} bottle${S.order.length>1?'s':''} with current amounts. Nothing is uploaded — it all travels inside the link.</div>
   <div class="qr" id="qr"><div class="note">Making QR code…</div></div>

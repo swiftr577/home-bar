@@ -1,5 +1,5 @@
 // Minimal offline cache for Home Bar. Bump CACHE when you publish a new index.html or cocktaildb.json.
-const CACHE = 'homebar-v10';
+const CACHE = 'homebar-v11';
 const FILES = ['./', './index.html', './library.json', './cocktaildb.json'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(async c => { for (const f of FILES) { try { await c.add(f); } catch (_) {} } }));
