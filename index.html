@@ -66,6 +66,16 @@ input{font:inherit;color:inherit}
 .ogrp{padding:8px 14px 4px;font-size:12px;color:var(--ink2);background:var(--bg);border-bottom:1px solid var(--line)}
 .pill.add{border-style:dashed;color:var(--amber);padding:0 14px;font-weight:600}
 .empty{color:var(--ink2);font-size:15px;padding:18px 0}
+.ver{text-align:center;color:var(--ink2);opacity:.55;font-size:11px;letter-spacing:.04em;padding:28px 0 6px}
+.made{margin:6px 0 18px;padding:14px;border-radius:14px;background:var(--bg2);border:1px solid var(--line)}
+.made .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.switch{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink2)}
+.switch input{appearance:none;width:42px;height:24px;border-radius:12px;background:var(--line);position:relative;margin:0;transition:background .2s}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.switch input:checked{background:var(--green)}
+.switch input:checked::after{left:21px}
+.made .done{font-size:14px;color:var(--green);margin-top:10px;line-height:1.5}
+.made .done button{color:var(--amber);font-weight:600;margin-left:8px}
 .more{width:100%;height:44px;border-radius:12px;border:1.5px dashed var(--line);color:var(--amber);font-weight:600;font-size:15px}
 
 /* sections and cards */
@@ -172,6 +182,7 @@ input[type=range]{width:100%;height:44px;accent-color:var(--amber);margin:4px 0 
     </div>
     <div class="pills" id="pills"></div>
     <div id="matches"></div>
+    <div class="ver" id="ver-bar"></div>
   </section>
 
   <!-- All cocktails -->
@@ -194,6 +205,7 @@ input[type=range]{width:100%;height:44px;accent-color:var(--amber);margin:4px 0 
     <button class="more" id="import">Import the whole TheCocktailDB catalogue</button>
     <div class="note" id="import-note"></div>
     <button class="link danger" id="clear" hidden></button>
+    <div class="ver" id="ver-web"></div>
   </section>
 
   <nav class="tabs">
@@ -488,7 +500,8 @@ R("Limoncello Spritz",0,"Wine glass",[["Limoncello",50],["Prosecco",90],["Soda w
 <script>
 // ---------- State & storage ----------
 const KEY='homebar.v1';
-let S={inv:{},order:[],drinks:1,ratings:{},imgs:{},extra:[]};
+const APP_VERSION='1.4.0';
+let S={inv:{},order:[],drinks:1,ratings:{},imgs:{},extra:[],consume:true,made:{}};
 let mem=null;
 async function load(){
   try{ if(window.storage){ const r=await window.storage.get(KEY,false); if(r&&r.value){S=Object.assign(S,JSON.parse(r.value));return;} } }catch(e){}
@@ -566,7 +579,7 @@ function card(rec,ev,extraMeta){
   const img=S.imgs[rec.name]||rec.img;
   const spirits=rec.ing.filter(i=>i.t!=='m').map(i=>i.n).join(', ');
   const chip= !ev?'' : ev.status==='ok'?`<span class="chip ok">Ready</span>` : ev.status==='low'?`<span class="chip low">Low on ${esc(ev.short[0])}</span>` : ev.status==='miss1'?`<span class="chip miss">Needs ${esc(ev.miss[0])}</span>`:`<span class="chip miss">Needs ${ev.miss.length}</span>`;
-  const stars=S.ratings[rec.name]?`<span class="stars">${'★'.repeat(S.ratings[rec.name])}</span>`:'';
+  const stars=(S.ratings[rec.name]?`<span class="stars">${'★'.repeat(S.ratings[rec.name])}</span>`:'')+(S.made[rec.name]?`<span class="iba">made ${S.made[rec.name]}×</span>`:'');
   const srcTag=(rec.src&&rec.src!=='built-in'&&rec.src!=='TheCocktailDB')?`<span class="iba">${esc(rec.src)}</span>`:'';
   b.innerHTML=`<div class="thumb">${img?`<img src="${esc(img)}" alt="" loading="lazy">`:GLASS}</div><div class="body"><div class="name"><span>${esc(rec.name)}</span>${rec.iba?'<span class="iba">IBA</span>':''}${srcTag}${stars}</div><div class="meta">${esc(extraMeta||spirits)}</div></div>${chip}`;
   b.onclick=()=>openDetail(rec);
@@ -724,11 +737,33 @@ function renderDetail(){
   <div class="drow"><span>Makes</span><div class="stepper"><button id="ddm">−</button><span><b>${S.drinks}</b> ${S.drinks>1?'drinks':'drink'}</span><button id="ddp">+</button></div></div>
   <ul class="ing">${rows}</ul>
   <div class="method">${esc(rec.method)}</div>
+  <div class="made"><div class="row"><button class="primary" id="made" style="height:46px">I made this${S.drinks>1?` (${S.drinks} drinks)`:''}</button></div>
+  <label class="switch"><input type="checkbox" id="consume" ${S.consume?'checked':''}><span>Take the amounts off my shelf</span></label>
+  <div class="done" id="made-note"></div></div>
   <div class="drow"><span>Your rating</span><div class="rate">${[1,2,3,4,5].map(n=>`<button data-r="${n}" class="${n<=rating?'on':''}" aria-label="${n} star">★</button>`).join('')}</div></div>
   ${id?`<a class="linkbtn" target="_blank" rel="noopener" href="https://www.thecocktaildb.com/drink/${esc(id)}">View on TheCocktailDB</a>`:''}</div>`;
   $('#back').onclick=()=>{ el.classList.remove('on'); current=null; };
+  $('#consume').onchange=e=>{ S.consume=e.target.checked; save(); };
+  $('#made').onclick=()=>madeThis(rec);
   $('#ddm').onclick=()=>setDrinks(S.drinks-1); $('#ddp').onclick=()=>setDrinks(S.drinks+1);
   el.querySelectorAll('.rate button').forEach(b=>b.onclick=()=>{ const n=+b.dataset.r; S.ratings[rec.name]=S.ratings[rec.name]===n?0:n; save(); renderDetail(); refresh(); });
+}
+
+// ---------- I made this ----------
+let lastMade=null;
+function madeThis(rec){
+  S.made[rec.name]=(S.made[rec.name]||0)+1;
+  const taken=[]; 
+  if(S.consume){
+    for(const i of rec.ing){ if(i.q<=0||(i.note&&UNITS.test(i.note)))continue; if(i.t!=='a'&&i.t!=='o'&&!MIXER_SET.has(i.n))continue;
+      const h=have(i.n); if(!h)continue; const amt=Math.min(h.ml,i.q*S.drinks); if(amt<=0)continue;
+      S.inv[h.name]=Math.max(0,Math.round((h.ml-amt)/5)*5); taken.push([h.name,amt]); }
+  }
+  lastMade={rec:rec.name,taken}; save(); refresh();
+  const note=$('#made-note'); if(!note)return;
+  const summary=taken.length?`Took ${taken.map(([n,a])=>`${a} ml ${n}`).join(', ')} off the shelf.`:(S.consume?'Nothing to take off — none of these are on your shelf.':'Noted. Shelf left as it was.');
+  note.innerHTML=`${esc(summary)}<button id="undo">Undo</button>`;
+  $('#undo').onclick=()=>{ if(!lastMade)return; S.made[lastMade.rec]=Math.max(0,(S.made[lastMade.rec]||1)-1); for(const [n,a] of lastMade.taken) if(n in S.inv) S.inv[n]+=a; lastMade=null; save(); refresh(); renderDetail(); };
 }
 
 // ---------- Sheets ----------
@@ -785,6 +820,7 @@ let wt; $('#q-web').oninput=()=>{ clearTimeout(wt); wt=setTimeout(webSearch,500)
 $('#import').onclick=importAll;
 $('#clear').onclick=()=>{ if(confirm('Remove all imported recipes? Your built-in classics stay.')){ S.extra=[]; save(); refresh(); renderImport(); $('#import-note').textContent=''; } };
 function refresh(){ renderPills(); renderMatches(); renderAll(); renderImport(); }
+$('#ver-bar').textContent=$('#ver-web').textContent='Home Bar v'+APP_VERSION;
 load().then(async()=>{ refresh(); const baked=await loadBaked(); refresh();
   if(!baked && !S.autoImported && S.extra.length<50 && navigator.onLine) importAll(true); });
 if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
