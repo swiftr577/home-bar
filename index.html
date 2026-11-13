@@ -258,13 +258,20 @@ const SPIRITS = ["Vodka","Gin","White rum","Dark rum","Spiced rum","Tequila","Me
 const MIXER_GROUPS = {
   "Juices":["Lime juice","Lemon juice","Orange juice","Pineapple juice","Cranberry juice","Grapefruit juice","Tomato juice","Passion fruit juice","Apple juice","Peach purée"],
   "Sodas & mixers":["Soda water","Tonic water","Cola","Lemonade","Ginger beer","Ginger ale","Grapefruit soda","Energy drink","Coconut water"],
-  "Syrups & sweeteners":["Simple syrup","Agave syrup","Honey syrup","Honey-ginger syrup","Orgeat syrup","Grenadine","Raspberry syrup","Vanilla syrup","Elderflower cordial","Lime cordial"],
-  "Dairy & other":["Cream","Coconut cream","Milk","Egg white","Espresso","Hot coffee"],
-  "Bitters":["Angostura bitters","Orange bitters","Peychaud's bitters"]
+  "Syrups & sweeteners":["Simple syrup","Agave syrup","Honey syrup","Honey-ginger syrup","Orgeat syrup","Grenadine","Raspberry syrup","Vanilla syrup","Elderflower cordial","Lime cordial","Sweet and sour mix","Chocolate syrup"],
+  "Dairy & other":["Cream","Coconut cream","Milk","Whipped cream","Ice cream","Espresso","Hot coffee","Tea"],
+  "Bitters":["Angostura bitters","Orange bitters","Peychaud's bitters"],
+  "Pantry & garnish":["Sugar","Brown sugar","Salt","Pepper","Honey","Egg white","Egg yolk","Mint","Basil","Cucumber","Orange","Olives","Olive brine","Cocktail onions","Maraschino cherries","Grapes","Passion fruit","Celery","Ginger","Tabasco","Worcestershire sauce","Nutmeg","Cinnamon","Cloves","Butter","Orange marmalade","Raisins","Almonds","Orange flower water"]
 };
+// Pantry items are yes/no (no volume). FREE items are assumed in every house.
+const PANTRY_SET = new Set(MIXER_GROUPS["Pantry & garnish"]);
+const FREE = new Set(["Water","Hot water","Ice"]);
 const MIXERS = Object.values(MIXER_GROUPS).flat();
 const MIXER_SET = new Set(MIXERS);
-const MIXNORM = {"lime juice":"Lime juice","juice of lime":"Lime juice","lime":"Lime juice","lemon juice":"Lemon juice","juice of lemon":"Lemon juice","lemon":"Lemon juice","orange juice":"Orange juice","pineapple juice":"Pineapple juice","cranberry juice":"Cranberry juice","grapefruit juice":"Grapefruit juice","tomato juice":"Tomato juice","passion fruit juice":"Passion fruit juice","apple juice":"Apple juice","peach nectar":"Peach purée","soda water":"Soda water","club soda":"Soda water","carbonated water":"Soda water","sparkling water":"Soda water","tonic water":"Tonic water","cola":"Cola","coca-cola":"Cola","pepsi":"Cola","lemonade":"Lemonade","sprite":"Lemonade","7-up":"Lemonade","ginger beer":"Ginger beer","ginger ale":"Ginger ale","sugar syrup":"Simple syrup","simple syrup":"Simple syrup","agave syrup":"Agave syrup","honey syrup":"Honey syrup","orgeat syrup":"Orgeat syrup","grenadine":"Grenadine","raspberry syrup":"Raspberry syrup","vanilla syrup":"Vanilla syrup","elderflower cordial":"Elderflower cordial","lime cordial":"Lime cordial","rose's lime juice":"Lime cordial","cream":"Cream","light cream":"Cream","heavy cream":"Cream","half-and-half":"Cream","coconut cream":"Coconut cream","cream of coconut":"Coconut cream","coconut milk":"Coconut cream","milk":"Milk","egg white":"Egg white","espresso":"Espresso","coffee":"Hot coffee","hot coffee":"Hot coffee","angostura bitters":"Angostura bitters","bitters":"Angostura bitters","orange bitters":"Orange bitters","peychaud bitters":"Peychaud's bitters"};
+const MIXNORM = {"lime juice":"Lime juice","juice of lime":"Lime juice","lime":"Lime juice","lemon juice":"Lemon juice","juice of lemon":"Lemon juice","lemon":"Lemon juice","orange juice":"Orange juice","pineapple juice":"Pineapple juice","cranberry juice":"Cranberry juice","grapefruit juice":"Grapefruit juice","tomato juice":"Tomato juice","passion fruit juice":"Passion fruit juice","apple juice":"Apple juice","peach nectar":"Peach purée","soda water":"Soda water","club soda":"Soda water","carbonated water":"Soda water","sparkling water":"Soda water","tonic water":"Tonic water","cola":"Cola","coca-cola":"Cola","pepsi":"Cola","lemonade":"Lemonade","sprite":"Lemonade","7-up":"Lemonade","ginger beer":"Ginger beer","ginger ale":"Ginger ale","sugar syrup":"Simple syrup","simple syrup":"Simple syrup","agave syrup":"Agave syrup","honey syrup":"Honey syrup","orgeat syrup":"Orgeat syrup","grenadine":"Grenadine","raspberry syrup":"Raspberry syrup","vanilla syrup":"Vanilla syrup","elderflower cordial":"Elderflower cordial","lime cordial":"Lime cordial","rose's lime juice":"Lime cordial","cream":"Cream","light cream":"Cream","heavy cream":"Cream","half-and-half":"Cream","coconut cream":"Coconut cream","cream of coconut":"Coconut cream","coconut milk":"Coconut cream","milk":"Milk","egg white":"Egg white","espresso":"Espresso","coffee":"Hot coffee","hot coffee":"Hot coffee","angostura bitters":"Angostura bitters","bitters":"Angostura bitters","orange bitters":"Orange bitters","peychaud bitters":"Peychaud's bitters",
+"sweet and sour":"Sweet and sour mix","sour mix":"Sweet and sour mix","sweet and sour mix":"Sweet and sour mix","sweet & sour":"Sweet and sour mix","chocolate syrup":"Chocolate syrup","whipped cream":"Whipped cream","whipping cream":"Cream","double cream":"Cream","single cream":"Cream","ice cream":"Ice cream","vanilla ice-cream":"Ice cream","vanilla ice cream":"Ice cream","tea":"Tea","iced tea":"Tea",
+"sugar":"Sugar","powdered sugar":"Sugar","superfine sugar":"Sugar","caster sugar":"Sugar","sugar cube":"Sugar","demerara sugar":"Sugar","brown sugar":"Brown sugar","salt":"Salt","salt rim":"Salt","pinch of salt":"Salt","salt & pepper":"Salt","pepper":"Pepper","black pepper":"Pepper","honey":"Honey","egg":"Egg white","egg yolk":"Egg yolk","mint":"Mint","basil":"Basil","cucumber":"Cucumber","orange":"Orange","orange peel":"Orange","orange slices":"Orange","olive":"Olives","olives":"Olives","olive brine":"Olive brine","olive juice":"Olive brine","cocktail onion":"Cocktail onions","cocktail onions":"Cocktail onions","cherry":"Maraschino cherries","cherries":"Maraschino cherries","maraschino cherry":"Maraschino cherries","maraschino cherries":"Maraschino cherries","grapes":"Grapes","passion fruit":"Passion fruit","celery":"Celery","ginger":"Ginger","tabasco":"Tabasco","tabasco sauce":"Tabasco","hot sauce":"Tabasco","worcestershire sauce":"Worcestershire sauce","nutmeg":"Nutmeg","cinnamon":"Cinnamon","cloves":"Cloves","butter":"Butter","marmalade":"Orange marmalade","orange marmalade":"Orange marmalade","raisins":"Raisins","almonds":"Almonds","orange flower water":"Orange flower water",
+"water":"Water","hot water":"Hot water","boiling water":"Hot water","ice":"Ice"};
 
 // A recipe ingredient on the left is satisfied by anything on the right
 const SUBS = {
@@ -289,7 +296,7 @@ const SUBS = {
 };
 
 // Names TheCocktailDB uses -> our names
-const NORMALISE = {"light rum":"White rum","white rum":"White rum","rum":"White rum","dark rum":"Dark rum","añejo rum":"Dark rum","gold rum":"Dark rum","spiced rum":"Spiced rum","151 proof rum":"Dark rum","blended whiskey":"Whisky (any)","whiskey":"Whisky (any)","whisky":"Whisky (any)","scotch":"Scotch whisky","bourbon":"Bourbon","rye whiskey":"Rye whiskey","irish whiskey":"Irish whiskey","vermouth":"Sweet vermouth","sweet vermouth":"Sweet vermouth","dry vermouth":"Dry vermouth","kahlua":"Coffee liqueur","tia maria":"Coffee liqueur","coffee liqueur":"Coffee liqueur","baileys irish cream":"Irish cream","irish cream":"Irish cream","cointreau":"Cointreau","triple sec":"Triple sec","grand marnier":"Grand Marnier","orange curacao":"Orange curaçao","blue curacao":"Blue curaçao","creme de cassis":"Crème de cassis","creme de cacao":"Crème de cacao","white creme de cacao":"Crème de cacao","dark creme de cacao":"Crème de cacao","creme de menthe":"Crème de menthe","green creme de menthe":"Crème de menthe","white creme de menthe":"Crème de menthe","creme de violette":"Crème de violette","maraschino liqueur":"Maraschino liqueur","luxardo maraschino":"Maraschino liqueur","st. germain":"Elderflower liqueur","peach schnapps":"Peach schnapps","southern comfort":"Southern Comfort","amaretto":"Amaretto","campari":"Campari","aperol":"Aperol","champagne":"Champagne","prosecco":"Prosecco","sparkling wine":"Sparkling wine","cachaca":"Cachaça","pisco":"Pisco","mezcal":"Mezcal","tequila":"Tequila","gold tequila":"Tequila","vodka":"Vodka","gin":"Gin","sloe gin":"Sloe gin","malibu rum":"Coconut rum","coconut rum":"Coconut rum","coconut liqueur":"Coconut rum","brandy":"Brandy","cognac":"Cognac","apricot brandy":"Apricot brandy","apricot liqueur":"Apricot brandy","galliano":"Galliano","midori melon liqueur":"Midori","midori":"Midori","drambuie":"Drambuie","benedictine":"Bénédictine","green chartreuse":"Green Chartreuse","yellow chartreuse":"Yellow Chartreuse","absinthe":"Absinthe","jägermeister":"Jägermeister","jagermeister":"Jägermeister","frangelico":"Frangelico","limoncello":"Limoncello","sake":"Sake","port":"Port","sherry":"Sherry","chambord raspberry liqueur":"Crème de mûre","creme de mure":"Crème de mûre","passoa":"Passion fruit liqueur","lillet blanc":"Lillet blanc","lillet":"Lillet blanc","fernet-branca":"Fernet-Branca","amaro":"Amaro","cherry brandy":"Cherry liqueur","cherry heering":"Cherry liqueur","cherry liqueur":"Cherry liqueur","white wine":"White wine","aquavit":"Aquavit","akvavit":"Aquavit","dry white wine":"White wine","red wine":"Red wine","ricard":"Absinthe","pernod":"Absinthe","ouzo":"Absinthe","sambuca":"Absinthe"};
+const NORMALISE = {"light rum":"White rum","white rum":"White rum","rum":"White rum","dark rum":"Dark rum","añejo rum":"Dark rum","gold rum":"Dark rum","spiced rum":"Spiced rum","151 proof rum":"Dark rum","blended whiskey":"Whisky (any)","whiskey":"Whisky (any)","whisky":"Whisky (any)","scotch":"Scotch whisky","bourbon":"Bourbon","rye whiskey":"Rye whiskey","irish whiskey":"Irish whiskey","vermouth":"Sweet vermouth","sweet vermouth":"Sweet vermouth","dry vermouth":"Dry vermouth","kahlua":"Coffee liqueur","tia maria":"Coffee liqueur","coffee liqueur":"Coffee liqueur","baileys irish cream":"Irish cream","irish cream":"Irish cream","cointreau":"Cointreau","triple sec":"Triple sec","grand marnier":"Grand Marnier","orange curacao":"Orange curaçao","curacao":"Orange curaçao","dry curacao":"Orange curaçao","blue curacao":"Blue curaçao","creme de cassis":"Crème de cassis","creme de cacao":"Crème de cacao","white creme de cacao":"Crème de cacao","dark creme de cacao":"Crème de cacao","creme de menthe":"Crème de menthe","green creme de menthe":"Crème de menthe","white creme de menthe":"Crème de menthe","creme de violette":"Crème de violette","maraschino liqueur":"Maraschino liqueur","luxardo maraschino":"Maraschino liqueur","st. germain":"Elderflower liqueur","peach schnapps":"Peach schnapps","southern comfort":"Southern Comfort","amaretto":"Amaretto","campari":"Campari","aperol":"Aperol","champagne":"Champagne","prosecco":"Prosecco","sparkling wine":"Sparkling wine","cachaca":"Cachaça","pisco":"Pisco","mezcal":"Mezcal","tequila":"Tequila","gold tequila":"Tequila","vodka":"Vodka","gin":"Gin","sloe gin":"Sloe gin","malibu rum":"Coconut rum","coconut rum":"Coconut rum","coconut liqueur":"Coconut rum","brandy":"Brandy","cognac":"Cognac","apricot brandy":"Apricot brandy","apricot liqueur":"Apricot brandy","galliano":"Galliano","midori melon liqueur":"Midori","midori":"Midori","drambuie":"Drambuie","benedictine":"Bénédictine","green chartreuse":"Green Chartreuse","yellow chartreuse":"Yellow Chartreuse","absinthe":"Absinthe","jägermeister":"Jägermeister","jagermeister":"Jägermeister","frangelico":"Frangelico","limoncello":"Limoncello","sake":"Sake","port":"Port","sherry":"Sherry","chambord raspberry liqueur":"Crème de mûre","creme de mure":"Crème de mûre","passoa":"Passion fruit liqueur","lillet blanc":"Lillet blanc","lillet":"Lillet blanc","fernet-branca":"Fernet-Branca","amaro":"Amaro","cherry brandy":"Cherry liqueur","cherry heering":"Cherry liqueur","cherry liqueur":"Cherry liqueur","white wine":"White wine","aquavit":"Aquavit","akvavit":"Aquavit","dry white wine":"White wine","red wine":"Red wine","ricard":"Absinthe","pernod":"Absinthe","ouzo":"Absinthe","sambuca":"Absinthe"};
 
 // ---------- Built-in library (per single drink, ml). a = spirit needed, o = optional spirit, m = mixer/garnish ----------
 const R = (name,iba,glass,ing,method) => ({name,iba,glass,ing:ing.map(([n,q,t,note])=>({n,q,t:t||'a',note})),method,src:'built-in'});
@@ -529,7 +536,7 @@ R("Limoncello Spritz",0,"Wine glass",[["Limoncello",50],["Prosecco",90],["Soda w
 <script>
 // ---------- State & storage ----------
 const KEY='homebar.v1';
-const APP_VERSION='1.6.2';
+const APP_VERSION='1.7.0';
 let S={inv:{},order:[],drinks:1,ratings:{},imgs:{},extra:[],consume:true,made:{},mini:false};
 let mem=null;
 async function load(){
@@ -558,16 +565,22 @@ async function loadBaked(){
   }
   return false;
 }
+// Accent- and case-insensitive key: "Creme de Cacao" === "Crème de cacao"
+const norm=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+let INVN={};
+function indexInv(){ INVN={}; for(const k in S.inv) INVN[norm(k)]=k; }
 function have(name){
   const cands=[name].concat(SUBS[name]||[]); let best=null;
-  for(const c of cands){ if(c in S.inv && (!best||S.inv[c]>best.ml)) best={name:c,ml:S.inv[c]}; }
+  for(const c of cands){ const k=INVN[norm(c)]; if(k!==undefined && (!best||S.inv[k]>best.ml)) best={name:k,ml:S.inv[k]}; }
   return best;
 }
+// Volume only matters for liquids with a real ml quantity
+const needsQty=i=>!PANTRY_SET.has(i.n)&&i.q>0&&!(i.note&&UNITS.test(i.note));
 function evaluate(rec){
   const miss=[],short=[];
   for(const i of rec.ing){
-    if(i.t==='a'){ const h=have(i.n); if(!h)miss.push(i.n); else if(h.ml<i.q*S.drinks)short.push(i.n); }
-    else if(i.t==='m'&&MIXER_SET.has(i.n)){ const h=have(i.n); if(!h)miss.push(i.n); else if(!i.note&&i.q>0&&h.ml<i.q*S.drinks)short.push(i.n); }
+    if(i.t==='o'||FREE.has(i.n))continue;
+    const h=have(i.n); if(!h)miss.push(i.n); else if(needsQty(i)&&h.ml<i.q*S.drinks)short.push(i.n);
   }
   const status= miss.length? (miss.length===1?'miss1':'no') : (short.length?'low':'ok');
   return {status,miss,short};
@@ -586,19 +599,21 @@ function fmtQ(i){
 // ---------- Pills ----------
 function renderPills(){
   const el=$('#pills'); el.innerHTML=''; el.classList.toggle('mini',!!S.mini); $('#mini').textContent=S.mini?'Full size':'Minimise'; $('#mini').hidden=S.order.length<4;
-  const spirits=S.order.filter(n=>!MIXER_SET.has(n)), mixers=S.order.filter(n=>MIXER_SET.has(n));
+  const spirits=S.order.filter(n=>!MIXER_SET.has(n)), mixers=S.order.filter(n=>MIXER_SET.has(n)&&!PANTRY_SET.has(n)), pantry=S.order.filter(n=>PANTRY_SET.has(n));
   const mk=(n,isMix)=>{
     const ml=S.inv[n]; const pct=Math.min(100,ml/(isMix?1000:750)*100);
     const b=document.createElement('div'); b.className='pill'+(isMix?' mix':'');
-    b.innerHTML=`<span class="fill ${ml<100?'low':''}" style="width:${pct}%"></span><button class="t" aria-label="Adjust ${esc(n)}"><span>${esc(n)}</span><small>~${ml} ml</small></button><button class="x" aria-label="Remove ${esc(n)}">×</button>`;
-    b.querySelector('.t').onclick=()=>openAmount(n);
+    const isP=PANTRY_SET.has(n);
+    b.innerHTML=(isP?'':`<span class="fill ${ml<100?'low':''}" style="width:${pct}%"></span>`)+`<button class="t" aria-label="${esc(n)}"><span>${esc(n)}</span>${isP?'':`<small>~${ml} ml</small>`}</button><button class="x" aria-label="Remove ${esc(n)}">×</button>`;
+    if(!isP) b.querySelector('.t').onclick=()=>openAmount(n);
     b.querySelector('.x').onclick=()=>{ delete S.inv[n]; S.order=S.order.filter(x=>x!==n); save(); refresh(); };
     el.appendChild(b);
   };
   spirits.forEach(n=>mk(n,false));
   if(mixers.length){ const br=document.createElement('div'); br.className='break'; el.appendChild(br); mixers.forEach(n=>mk(n,true)); }
+  if(pantry.length){ const br=document.createElement('div'); br.className='break'; el.appendChild(br); pantry.forEach(n=>mk(n,true)); }
   const add=document.createElement('button'); add.className='pill add'; add.textContent='+ Add a bottle'; add.onclick=openAdd; el.appendChild(add);
-  $('#bar-sub').textContent= S.order.length? `${S.order.length} bottle${S.order.length>1?'s':''} on the shelf — tap one to adjust`:'Add your spirits and mixers — cocktails you can make appear below';
+  $('#bar-sub').textContent= S.order.length? `${S.order.length} item${S.order.length>1?'s':''} on the shelf — tap one to adjust`:'Add your spirits, mixers and pantry items — cocktails you can make appear below';
   $('#dn').textContent=S.drinks; $('#dn').nextSibling.textContent=S.drinks>1?' drinks':' drink';
 }
 
@@ -643,8 +658,8 @@ function renderMatches(){
 const F={sort:'az',made:'all',ings:[]};
 function matchesIng(rec,n){ const c=new Set([n].concat(SUBS[n]||[])); return rec.ing.some(i=>c.has(i.n)); }
 function renderAll(){
-  const q=$('#q-all').value.trim().toLowerCase(); const el=$('#all-list'); el.innerHTML='';
-  let list=allRecipes().filter(r=>!q||r.name.toLowerCase().includes(q)||r.ing.some(i=>i.n.toLowerCase().includes(q)||(SUBS[i.n]||[]).some(s=>s.toLowerCase().includes(q))));
+  const q=norm($('#q-all').value); const el=$('#all-list'); el.innerHTML='';
+  let list=allRecipes().filter(r=>!q||norm(r.name).includes(q)||r.ing.some(i=>norm(i.n).includes(q)||(SUBS[i.n]||[]).some(s=>norm(s).includes(q))));
   if(F.made==='made') list=list.filter(r=>S.made[r.name]); else if(F.made==='new') list=list.filter(r=>!S.made[r.name]);
   for(const n of F.ings) list=list.filter(r=>matchesIng(r,n));
   const evs=new Map(); const ev=r=>{ if(!evs.has(r)) evs.set(r,S.order.length?evaluate(r):null); return evs.get(r); };
@@ -678,8 +693,8 @@ function openFilter(){
   <div class="links"><button class="link" id="f-clear">Clear all</button></div>`);
   for(const id of ['f-sort','f-made']) $('#'+id).querySelectorAll('button').forEach(b=>b.onclick=()=>{ $('#'+id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(id==='f-sort')F.sort=b.dataset.v; else F.made=b.dataset.v; });
   const box=$('#f-ings'), inp=$('#f-q');
-  const draw=()=>{ const q=inp.value.trim().toLowerCase(); box.innerHTML='';
-    for(const n of names){ if(q&&!n.toLowerCase().includes(q)&&!F.ings.includes(n))continue;
+  const draw=()=>{ const q=norm(inp.value); box.innerHTML='';
+    for(const n of names){ if(q&&!norm(n).includes(q)&&!F.ings.includes(n))continue;
       const l=document.createElement('label'); l.innerHTML=`<input type="checkbox" ${F.ings.includes(n)?'checked':''}><span>${esc(n)}</span><small>${counts[n]}</small>`;
       l.querySelector('input').onchange=e=>{ F.ings=e.target.checked?F.ings.concat(n):F.ings.filter(x=>x!==n); }; box.appendChild(l); } };
   inp.oninput=draw; draw();
@@ -723,21 +738,24 @@ function toMl(m){
   if(num)return{q:Math.round(num*30),note:m};
   return{q:0,note:m};
 }
-const SPIRIT_LC=Object.fromEntries(SPIRITS.map(s=>[s.toLowerCase(),s]));
+const SPIRIT_LC=Object.fromEntries(SPIRITS.map(s=>[norm(s),s]));
+const NS={}, NM={};  // normalised synonym -> canonical name
+for(const [k,v] of Object.entries(NORMALISE)) NS[norm(k)]=v; for(const s of SPIRITS) NS[norm(s)]=s; NS[norm('Whisky (any)')]='Whisky (any)';
+for(const [k,v] of Object.entries(MIXNORM)) NM[norm(k)]=v; for(const s of MIXERS) NM[norm(s)]=s; for(const s of FREE) NM[norm(s)]=s;
 // Every name we know, longest first, so "ginger beer" beats "gin" and "coffee liqueur" beats "coffee"
-const KNOWN=(()=>{ const m=[];
-  for(const [k,v] of Object.entries(NORMALISE)) m.push([k,v,'a']);
-  for(const s of SPIRITS) m.push([s.toLowerCase(),s,'a']);
-  for(const [k,v] of Object.entries(MIXNORM)) m.push([k,v,'m']);
-  for(const s of MIXERS) m.push([s.toLowerCase(),s,'m']);
-  const seen=new Set(); return m.filter(([k])=>!seen.has(k)&&seen.add(k)).sort((a,b)=>b[0].length-a[0].length)
-    .map(([k,v,t])=>[new RegExp('(^|[^a-z])'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^a-z])','i'),v,t]); })();
+const KNOWN=Object.entries(NS).map(([k,v])=>[k,v,'a']).concat(Object.entries(NM).map(([k,v])=>[k,v,'m']))
+  .sort((a,b)=>b[0].length-a[0].length)
+  .map(([k,v,t])=>[new RegExp('(^|[^a-z])'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^a-z])'),v,t]);
 function resolve(raw){
-  const lc=raw.trim().toLowerCase().replace(/^(fresh(ly)?( squeezed)?|chilled|cold|hot|good|quality|premium|dry|london dry|aged|blanco|silver|reposado|añejo|anejo)\s+/,'');
-  if(NORMALISE[lc])return {n:NORMALISE[lc],t:'a'}; if(SPIRIT_LC[lc])return {n:SPIRIT_LC[lc],t:'a'}; if(MIXNORM[lc])return {n:MIXNORM[lc],t:'m'};
+  const lc=norm(raw).replace(/^(fresh(ly)?( squeezed)?|chilled|cold|good|quality|premium|london dry|aged|blanco|silver|reposado|anejo)\s+/,'');
+  if(NS[lc])return {n:NS[lc],t:'a'}; if(NM[lc])return {n:NM[lc],t:'m'};
   for(const [re,v,t] of KNOWN) if(re.test(lc)) return {n:v,t};
-  return {n:raw.trim(),t:'m'};
+  return {n:String(raw).trim(),t:'m'};
 }
+// Exact (accent-insensitive) name or known synonym -> canonical; otherwise tidy what was typed
+function canonName(raw){ const k=norm(raw); return NS[k]||NM[k]||String(raw).trim().replace(/^\w/,c=>c.toUpperCase()); }
+// Built-in recipes: bring mixer/pantry names onto the same canonical list
+for(const r of LIBRARY) for(const i of r.ing) if(i.t==='m'){ const x=resolve(i.n); if(x.t==='m') i.n=x.n; }
 function convertGeneric(x){
   const ing=x.ingredients.map(i=>{ const r=resolve(i.name); const {q,note}=toMl(i.measure);
     return r.t==='a'?{n:r.n,q:q||30,t:'a',note:note||''}:{n:r.n,q,t:'m',note:note||''}; });
@@ -796,9 +814,8 @@ function renderDetail(){
   const ev=S.order.length?evaluate(rec):null; const rating=S.ratings[rec.name]||0;
   const id=rec.id||S.imgs[rec.name+'#id'];
   const rows=rec.ing.map(i=>{ let cls='',tag='';
-    if(i.t==='a'&&ev){ const h=have(i.n); if(!h){cls='miss';tag='not on shelf';} else if(h.ml<i.q*S.drinks){cls='short';tag=`only ~${h.ml} ml`;} else if(h.name!==i.n){tag=`using ${h.name}`;} }
-    if(i.t==='m'&&MIXER_SET.has(i.n)&&S.order.length){ const h=have(i.n); if(h){ if(!i.note&&i.q>0&&h.ml<i.q*S.drinks){cls='short';tag=`only ~${h.ml} ml`;} else tag='on shelf'; } else {cls='miss';tag='not on shelf';} }
-    if(i.t==='o')tag=tag||'optional';
+    if(ev&&i.t!=='o'&&!FREE.has(i.n)){ const h=have(i.n); if(!h){cls='miss';tag='not on shelf';} else if(needsQty(i)&&h.ml<i.q*S.drinks){cls='short';tag=`only ~${h.ml} ml`;} else if(norm(h.name)!==norm(i.n)){tag=`using ${h.name}`;} }
+    if(i.t==='o')tag='optional';
     return `<li class="${cls}"><span>${esc(i.n)}${tag?`<span class="tag">${esc(tag)}</span>`:''}</span><span class="q">${fmtQ(i)}</span></li>`; }).join('');
   el.innerHTML=`<div class="hero">${img?`<img src="${esc(img)}" alt="${esc(rec.name)}">`:GLASS}<button class="back" id="back">‹ Back</button></div>
   <div class="dbody"><h2>${esc(rec.name)}</h2><div class="meta">${esc(rec.glass||'')}${rec.iba?' · IBA official':''} · ${rec.src==='built-in'?'Classic':esc(rec.src)}</div>
@@ -827,7 +844,7 @@ function madeThis(rec){
   S.made[rec.name]=(S.made[rec.name]||0)+1;
   const taken=[]; 
   if(S.consume){
-    for(const i of rec.ing){ if(i.q<=0||(i.note&&UNITS.test(i.note)))continue; if(i.t!=='a'&&i.t!=='o'&&!MIXER_SET.has(i.n))continue;
+    for(const i of rec.ing){ if(i.q<=0||(i.note&&UNITS.test(i.note)))continue; if(PANTRY_SET.has(i.n)||FREE.has(i.n))continue;
       const h=have(i.n); if(!h)continue; const amt=Math.min(h.ml,i.q*S.drinks); if(amt<=0)continue;
       S.inv[h.name]=Math.max(0,Math.round((h.ml-amt)/5)*5); taken.push([h.name,amt]); }
   }
@@ -878,7 +895,7 @@ function offerIncoming(items){
   <ul class="incoming">${rows}</ul>
   <button class="primary" id="inc-merge">Merge — update these, keep my other bottles</button>
   <div class="links"><button class="link danger" id="inc-replace">Replace my whole shelf</button><button class="link" id="inc-skip">Ignore</button></div>`);
-  const apply=(replace)=>{ if(replace){ S.inv={}; S.order=[]; } for(const [n,ml] of items){ S.inv[n]=ml; if(!S.order.includes(n))S.order.push(n); } save(); hideSheet(); refresh(); };
+  const apply=(replace)=>{ if(replace){ S.inv={}; S.order=[]; } for(const [raw,ml] of items){ const n=INVN[norm(raw)]||canonName(raw); S.inv[n]=ml; if(!S.order.includes(n))S.order.push(n); INVN[norm(n)]=n; } save(); hideSheet(); refresh(); };
   $('#inc-merge').onclick=()=>apply(false); $('#inc-replace').onclick=()=>{ if(confirm('Replace everything on your shelf with the shared list?')) apply(true); }; $('#inc-skip').onclick=hideSheet;
 }
 async function pasteShelf(){
@@ -916,16 +933,25 @@ function hideSheet(){ if(typeof scanStop==='function'&&scanStop){scanStop();scan
 $('#scrim').onclick=hideSheet;
 
 function openAdd(){
-  showSheet(`<h3>Add a bottle</h3><div class="hint">Type to filter, or scroll and tap</div><div class="combo"><input id="combo" placeholder="e.g. Gin" autocomplete="off" autocapitalize="words"></div><div class="options" id="opts"></div>`);
+  showSheet(`<h3>Add to shelf</h3><div class="hint">Type to filter (accents optional), or scroll and tap. Pantry items are just ticked on or off.</div><div class="combo"><input id="combo" placeholder="e.g. Gin, creme de cacao, sugar" autocomplete="off" autocapitalize="words"></div><div class="options" id="opts"></div><div class="links"><button class="link" id="add-done">Done</button></div>`);
+  $('#add-done').onclick=hideSheet;
   const inp=$('#combo'), opts=$('#opts');
-  const draw=()=>{ const q=inp.value.trim().toLowerCase(); opts.innerHTML='';
+  const draw=()=>{ const q=norm(inp.value); opts.innerHTML='';
     const groups=Object.assign({"Spirits & liqueurs":SPIRITS},MIXER_GROUPS);
     for(const [g,items] of Object.entries(groups)){
-      const list=items.filter(s=>s.toLowerCase().includes(q)); if(!list.length)continue;
+      const list=items.filter(s=>norm(s).includes(q)); if(!list.length)continue;
       const h=document.createElement('div'); h.className='ogrp'; h.textContent=g; opts.appendChild(h);
-      for(const s of list){ const b=document.createElement('button'); const has=s in S.inv; b.className=has?'have':''; b.textContent=has?`${s} — already on shelf (~${S.inv[s]} ml), tap to adjust`:s; b.onclick=()=>openAmount(s,!has); opts.appendChild(b); }
+      for(const s of list){ const b=document.createElement('button'); const key=INVN[norm(s)]; const has=key!==undefined; b.className=has?'have':'';
+        if(PANTRY_SET.has(s)){ b.textContent=has?`✓ ${s} — on shelf, tap to remove`:s;
+          b.onclick=()=>{ if(has){ delete S.inv[key]; S.order=S.order.filter(x=>x!==key); } else { S.inv[s]=1; S.order.push(s); } save(); refresh(); draw(); }; }
+        else { b.textContent=has?`${s} — already on shelf (~${S.inv[key]} ml), tap to adjust`:s; b.onclick=()=>openAmount(has?key:s,!has); }
+        opts.appendChild(b); }
     }
-    if(q&&!SPIRITS.concat(MIXERS).some(s=>s.toLowerCase()===q)){ const b=document.createElement('button'); b.className='custom'; const name=inp.value.trim().replace(/^\w/,c=>c.toUpperCase()); b.textContent=`Add "${name}"`; b.onclick=()=>openAmount(name,true); opts.appendChild(b); }
+    if(q){ const canon=canonName(inp.value); const listed=SPIRITS.concat(MIXERS).some(s=>norm(s)===norm(canon));
+      if(!listed||norm(canon)!==q){ const b=document.createElement('button'); b.className='custom'; const typed=inp.value.trim();
+        b.textContent= norm(canon)!==q?`Add "${typed}" as ${canon}`:`Add "${canon}"`;
+        b.onclick=()=>{ const key=INVN[norm(canon)]; if(PANTRY_SET.has(canon)){ if(key===undefined){ S.inv[canon]=1; S.order.push(canon); save(); refresh(); } draw(); } else openAmount(key!==undefined?key:canon,key===undefined); };
+        opts.appendChild(b); } }
   };
   inp.oninput=draw; draw(); setTimeout(()=>inp.focus(),250);
 }
@@ -967,9 +993,14 @@ $('#reset-made').onclick=()=>{ const n=Object.values(S.made).reduce((a,b)=>a+b,0
 let wt; $('#q-web').oninput=()=>{ clearTimeout(wt); wt=setTimeout(webSearch,500); }; $('#q-web').onkeydown=e=>{ if(e.key==='Enter'){ clearTimeout(wt); webSearch(); e.target.blur(); } };
 $('#import').onclick=importAll;
 $('#clear').onclick=()=>{ if(confirm('Remove all imported recipes? Your built-in classics stay.')){ S.extra=[]; save(); refresh(); renderImport(); $('#import-note').textContent=''; } };
-function refresh(){ renderPills(); renderMatches(); renderAll(); renderImport(); }
+function refresh(){ indexInv(); renderPills(); renderMatches(); renderAll(); renderImport(); }
 $('#ver-bar').textContent=$('#ver-web').textContent='Home Bar v'+APP_VERSION;
-load().then(async()=>{ refresh(); checkIncoming(); const baked=await loadBaked(); refresh();
+function migrate(){
+  const inv={}, order=[];
+  for(const k of S.order){ if(!(k in S.inv))continue; const c=canonName(k); if(c in inv){ inv[c]=Math.max(inv[c],S.inv[k]); } else { inv[c]=S.inv[k]; order.push(c); } }
+  S.inv=inv; S.order=order;
+}
+load().then(async()=>{ migrate(); refresh(); checkIncoming(); const baked=await loadBaked(); refresh();
   if(!baked && !S.autoImported && S.extra.length<50 && navigator.onLine) importAll(true); });
 if('serviceWorker' in navigator && location.protocol==='https:'){
   navigator.serviceWorker.register('sw.js').then(reg=>{ reg.update(); }).catch(()=>{});
